@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Entity
-@Table(name = "discord_profilevariable")
+@Table(name = "discord_profilevariable", comment = "Named configuration values belonging to Discord profiles.")
 @IdClass(Discord_ProfileVariable.UserNameID.class)
 public class Discord_ProfileVariable extends DatabaseObject<Discord_ProfileVariable> {
     @ManyToOne
@@ -21,14 +21,14 @@ public class Discord_ProfileVariable extends DatabaseObject<Discord_ProfileVaria
 
 
     @Id
-    @Column(name = "UserID", nullable = false)
+    @Column(name = "UserID", nullable = false, comment = "Discord user that owns this record.")
     private Long userID;
 
     @Id
-    @Column(name = "Name", nullable = false)
+    @Column(name = "Name", nullable = false, comment = "Setting name within the Discord profile.")
     private String name;
 
-    @Column(name = "Value", length = 4095)
+    @Column(name = "Value", length = 4095, comment = "Stored profile setting value.")
     private String value;
 
     public Discord_ProfileVariable() {}

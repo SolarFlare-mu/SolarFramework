@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Identifiers are handed out in loops far faster than the clock they read, so the only interesting question is whether two rows can ever claim the same one. */
 class DatabaseObjectNextIdTest {

@@ -2,11 +2,10 @@ package org.solarframework.ai;
 
 import org.solarframework.ai.dto.AIOptions;
 import org.solarframework.ai.dto.ModelFacts;
-import org.solarframework.ai.enums.ProgrammingLanguage;
-import org.solarframework.ai.obj.Conversation;
-import org.solarframework.ai.obj.ChatMessage;
 import org.solarframework.ai.dto.ToolCall;
 import org.solarframework.ai.dto.TurnResult;
+import org.solarframework.ai.obj.ChatMessage;
+import org.solarframework.ai.obj.Conversation;
 
 import java.util.List;
 import java.util.function.Consumer;

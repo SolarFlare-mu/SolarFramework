@@ -2,13 +2,14 @@ package org.solarframework.ai;
 
 import org.junit.jupiter.api.Test;
 import org.solarframework.ai.dto.ToolCall;
-import org.solarframework.ai.obj.ChatMessage;
 import org.solarframework.ai.memory.Memory;
+import org.solarframework.ai.obj.ChatMessage;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MemoryTest {
 

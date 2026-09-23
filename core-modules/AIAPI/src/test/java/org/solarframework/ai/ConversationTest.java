@@ -3,11 +3,11 @@ package org.solarframework.ai;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solarframework.ai.dto.AgentRun;
+import org.solarframework.ai.dto.ToolCall;
+import org.solarframework.ai.enums.Role;
+import org.solarframework.ai.memory.Memory;
 import org.solarframework.ai.obj.ChatMessage;
 import org.solarframework.ai.obj.Conversation;
-import org.solarframework.ai.enums.Role;
-import org.solarframework.ai.dto.ToolCall;
-import org.solarframework.ai.memory.Memory;
 
 import java.time.Duration;
 import java.time.Instant;

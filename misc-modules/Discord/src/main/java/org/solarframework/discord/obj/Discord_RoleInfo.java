@@ -10,7 +10,7 @@ import static org.solarframework.db.spring.DatabaseRegistry.SolarDBManager;
 import static org.solarframework.discord.core.BotBuilder.DiscordAccount;
 
 @Entity
-@Table(name = "discord_roleinfo")
+@Table(name = "discord_roleinfo", comment = "Discord roles discovered for a registered server.")
 @IdClass(ActionServerID.class)
 public class Discord_RoleInfo extends DatabaseObject<Discord_RoleInfo> {
     @ManyToOne
@@ -21,16 +21,16 @@ public class Discord_RoleInfo extends DatabaseObject<Discord_RoleInfo> {
     private transient Role R;
 
     @Id
-    @Column(name = "Action", length = 64, nullable = false)
+    @Column(name = "Action", length = 64, nullable = false, comment = "Action name used to look up this Discord mapping.")
     private String Action;
     @Id
-    @Column(name = "ServerID", nullable = false)
+    @Column(name = "ServerID", nullable = false, comment = "Discord server that owns this record.")
     private Long ServerID;
 
-    @Column(name = "RoleID", nullable = false)
+    @Column(name = "RoleID", nullable = false, comment = "Discord role assigned to the action.")
     private Long RoleID;
 
-    @Column(name = "EmojiID")
+    @Column(name = "EmojiID", comment = "Emoji associated with the mapped role.")
     private Long EmojiID;
 
     public Discord_RoleInfo() {}

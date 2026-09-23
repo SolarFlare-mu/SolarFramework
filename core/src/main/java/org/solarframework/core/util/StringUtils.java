@@ -11,6 +11,14 @@ import java.util.zip.ZipOutputStream;
 
 public class StringUtils {
 
+    /** Keeps user text inside a generated Java string, including quotes, backslashes and control characters. */
+    public static String escapeJava(String text) {
+        if (text == null) return "";
+        StringBuilder escaped = new StringBuilder();
+        for (char c : text.toCharArray()) escaped.append(c == '\\' ? "\\\\" : c == '"' ? "\\\"" : c < 32 || c == 127 ? String.format("\\%03o", (int) c) : String.valueOf(c));
+        return escaped.toString();
+    }
+
     public static String replaceLast(String text, String searchString, String replacement) {
         if (text == null || searchString == null || replacement == null) {
             return text;

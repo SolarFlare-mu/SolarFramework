@@ -5,6 +5,7 @@ import org.solarframework.db.api.dto.TableStats;
 import org.solarframework.db.exception.DataMigrationException;
 import org.solarframework.db.spring.DatabaseObject;
 
+import java.sql.Driver;
 import java.util.*;
 
 public interface IDatabaseManager {
@@ -93,6 +94,12 @@ public interface IDatabaseManager {
     ClassLoader getEntityClassloader(String key);
 
     String getEntityClassloaderKey(ClassLoader key);
+
+    /** The driver behind this class name, from the host or from whichever module ships it, or null when nothing carries it. */
+    Driver findDriver(String driverClass);
+
+    void requireManualAssignment(String classLoaderKey);
+    boolean needsManualAssignment(String classLoaderKey);
 
     void LoadFromFile(String path);
 

@@ -2,77 +2,50 @@ package org.solarframework.proxyserver.netty;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.solarframework.proxyserver.obj.BaseDomain;
-import org.solarframework.proxyserver.obj.Domain;
-import org.solarframework.proxyserver.obj.RateLimitRule;
-import org.solarframework.proxyserver.obj.Subdomain;
+import org.solarframework.core.util.HostsFile;
+import org.solarframework.proxyserver.obj.domains.BaseDomain;
+import org.solarframework.proxyserver.obj.domains.Domain;
+import org.solarframework.proxyserver.obj.ratelimit.RateLimitRule;
+import org.solarframework.proxyserver.obj.domains.Subdomain;
 import org.solarframework.core.util.RateLimiter;
 import org.solarframework.certs.MKCert;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class ProxyService {
-    protected static ProxyService WAMPSERVER;
+    protected static ProxyService PROXYSERVER;
     private static final Logger log = LoggerFactory.getLogger(ProxyService.class);
 
     private final String COMMENT_TAG = "# Added by SolarFramework-ProxyManager";
+    private final HostsFile hostsFile = new HostsFile(COMMENT_TAG, log);
     private final List<Domain> domains;
     private final RateLimiter rateLimiter = new RateLimiter();
     private volatile List<RateLimitRule> rateRules = List.of();
 
 
-    public List<String> getAbsoluteHosts() {
-        try {
-            return Files.readAllLines(getHostsFilePath()).stream().filter(line -> line.contains(COMMENT_TAG)).map(s -> s.split(" ")[1]).collect(Collectors.toList());
-        } catch (IOException e) {
-            return new ArrayList<>();
-        }
-    }
+    public List<String> getAbsoluteHosts() { return hostsFile.getHosts(); }
     public List<String> getHosts() {
         return getDomains().stream().flatMap(domain -> domain.getHosts().stream()).toList();
     }
-
     public void addHostEntry(String ip, String hosts) throws IOException {
         addHostEntry(ip, List.of(hosts));
     }
     public void addHostEntry(String ip, List<String> hosts) throws IOException {
-        Path hostsPath = getHostsFilePath();
-        for (String host : hosts) {
-            if (Files.readAllLines(hostsPath).stream().noneMatch(line -> line.contains(host))) {
-                List<String> lines = Files.readAllLines(hostsPath);
-                String prefix = lines.getLast().isBlank() ? "" : "\n";
-                Files.write(hostsPath, (prefix + ip + " " + host + " " + COMMENT_TAG).getBytes(), StandardOpenOption.APPEND);
-                log.info("Host domain [{}] added to [C:/Windows/System32/drivers/etc/hosts]", host);
-            }
-        }
+        hostsFile.add(ip, hosts);
     }
-
     public void removeHostEntry(String hosts) throws IOException {
         removeHostEntry(List.of(hosts));
     }
     public void removeHostEntry(List<String> hosts) throws IOException {
-        Path hostsPath = getHostsFilePath();
-        for (String host : hosts) {
-            List<String> keptLines = Files.readAllLines(hostsPath).stream().filter(line -> !(line.contains(host) && line.contains(COMMENT_TAG))).collect(Collectors.toList());
-            Files.write(hostsPath, keptLines, StandardOpenOption.TRUNCATE_EXISTING);
-            log.info("Host domain [{}] removed from [C:/Windows/System32/drivers/etc/hosts]", host);
-        }
+        hostsFile.remove(hosts);
     }
-    public void clearHostEntries() throws IOException {
-        Path hostsPath = getHostsFilePath();
-        List<String> keptLines = Files.readAllLines(hostsPath).stream().filter(line -> !line.contains(COMMENT_TAG)).collect(Collectors.toList());
-        Files.write(hostsPath, keptLines, StandardOpenOption.TRUNCATE_EXISTING);
-        log.info("Deleted all program-made hosts from [C:/Windows/System32/drivers/etc/hosts]");
-    }
+    public void clearHostEntries() throws IOException { hostsFile.clear(); }
 
 
 
@@ -84,8 +57,8 @@ public class ProxyService {
     }
     public List<BaseDomain<?>> getAllDomains() {
         List<BaseDomain<?>> domains = new ArrayList<>();
-        domains.addAll(WAMPSERVER.getDomains());
-        domains.addAll(WAMPSERVER.getSubDomains());
+        domains.addAll(PROXYSERVER.getDomains());
+        domains.addAll(PROXYSERVER.getSubDomains());
         return domains;
     }
 
@@ -95,7 +68,7 @@ public class ProxyService {
 
     /** The registry the running proxy serves from, so a plugin can reach it without being in this package. */
     public static ProxyService current() {
-        return WAMPSERVER;
+        return PROXYSERVER;
     }
 
     /** Whether a request was let in at all, how long it must wait when it was, and whether the rule that decided was
@@ -160,10 +133,6 @@ public class ProxyService {
         }
     }
 
-
-    private static Path getHostsFilePath() {
-        return Paths.get(System.getProperty("os.name").toLowerCase().contains("win") ? "C:\\Windows\\System32\\drivers\\etc\\hosts" : "/etc/hosts");
-    }
 
     public String stripPort(String host) {
         if (host == null) return null;

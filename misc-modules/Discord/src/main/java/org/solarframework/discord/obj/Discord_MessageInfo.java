@@ -25,7 +25,7 @@ import static org.solarframework.discord.utils.WebhookUtils.getWebhookOfChannel;
 import static org.solarframework.discord.utils.WebhookUtils.served;
 
 @Entity
-@Table(name = "discord_messageinfo")
+@Table(name = "discord_messageinfo", comment = "Discord messages retained by framework integrations.")
 @IdClass(ActionServerID.class)
 public class Discord_MessageInfo extends DatabaseObject<Discord_MessageInfo> {
     @ManyToOne
@@ -44,18 +44,18 @@ public class Discord_MessageInfo extends DatabaseObject<Discord_MessageInfo> {
     private transient Message M = null;
 
     @Id
-    @Column(name = "Action", length = 64, nullable = false)
+    @Column(name = "Action", length = 64, nullable = false, comment = "Action name used to look up this Discord mapping.")
     private String Action;
     @Id
-    @Column(name = "ServerID", nullable = false)
+    @Column(name = "ServerID", nullable = false, comment = "Discord server that owns this record.")
     private Long ServerID;
 
-    @Column(name = "ChannelID", nullable = false)
+    @Column(name = "ChannelID", nullable = false, comment = "Discord channel associated with this record.")
     private Long ChannelID;
-    @Column(name = "MessageID", unique = true)
+    @Column(name = "MessageID", unique = true, comment = "Discord message associated with this action.")
     private Long MessageID;
 
-    @Column(name = "ChannelAction", length = 64, nullable = false)
+    @Column(name = "ChannelAction", length = 64, nullable = false, comment = "Channel action used to locate the message's channel.")
     private String ChannelAction;
 
     public Discord_MessageInfo() {}

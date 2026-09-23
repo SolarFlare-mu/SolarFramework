@@ -30,7 +30,7 @@ import org.solarframework.discord.utils.WebhookMessage;
 import static org.solarframework.discord.utils.WebhookUtils.served;
 
 @Entity
-@Table(name = "discord_guildinfo")
+@Table(name = "discord_guildinfo", comment = "Discord servers known to the framework.")
 public class Discord_GuildInfo extends DatabaseObject.ID_OBJ<Long, Discord_GuildInfo> {
     private transient Guild Guild;
 
@@ -45,29 +45,29 @@ public class Discord_GuildInfo extends DatabaseObject.ID_OBJ<Long, Discord_Guild
 
     private transient Object extender;
 
-    @Column(name = "OwnerID", nullable = false)
+    @Column(name = "OwnerID", nullable = false, comment = "Discord user who owns the server.")
     private Long ownerID;
 
-    @Column(name = "MemberCount", nullable = false)
+    @Column(name = "MemberCount", nullable = false, comment = "Number of server members at the last refresh.")
     private Integer memberCount;
 
-    @Column(name = "Name", nullable = false, length = 256)
+    @Column(name = "Name", nullable = false, length = 256, comment = "Discord server name.")
     private String name;
 
-    @Column(name = "Description", length = 2048)
+    @Column(name = "Description", length = 2048, comment = "Discord server description.")
     private String description;
     
-    @Column(name = "DominantColorcode", nullable = false, length = 7, columnDefinition = "VARCHAR(7) NOT NULL DEFAULT '#808080'")
+    @Column(name = "DominantColorcode", nullable = false, length = 7, columnDefinition = "VARCHAR(7) NOT NULL DEFAULT '#808080'", comment = "Dominant server colour as a hexadecimal colour code.")
     private String dominantColorcode = "#808080";
 
-    @Column(name = "InviteLink", length = 128)
+    @Column(name = "InviteLink", length = 128, comment = "Invite address for joining the server.")
     private String inviteLink;
 
-    @Column(name = "IconUrl", length = 512)
+    @Column(name = "IconUrl", length = 512, comment = "Address of the server icon.")
     private String iconUrl;
     
     @Convert(converter = Nationality.class)
-    @Column(name = "Nationality", length = 40, nullable = false, columnDefinition = "VARCHAR(40) NOT NULL DEFAULT 'International'")
+    @Column(name = "Nationality", length = 40, nullable = false, columnDefinition = "VARCHAR(40) NOT NULL DEFAULT 'International'", comment = "Nationality associated with the server.")
     private Nationalities nationality = Nationalities.International;
     @Converter
     public static class Nationality implements AttributeConverter<Nationalities, String> {
@@ -79,40 +79,40 @@ public class Discord_GuildInfo extends DatabaseObject.ID_OBJ<Long, Discord_Guild
         public Nationalities convertToEntityAttribute(String name) {return name == null ? null : Nationalities.valueOf(name);}
     }
 
-    @Column(name = "BannerUrl", length = 512)
+    @Column(name = "BannerUrl", length = 512, comment = "Address of the server banner.")
     private String bannerUrl;
 
-    @Column(name = "BoostTier")
+    @Column(name = "BoostTier", comment = "Server boost tier at the last refresh.")
     private Integer boostTier;
 
-    @Column(name = "BoostCount")
+    @Column(name = "BoostCount", comment = "Number of active server boosts.")
     private Integer boostCount;
 
-    @Column(name = "VerificationLevel", length = 32)
+    @Column(name = "VerificationLevel", length = 32, comment = "Verification level required to participate in the server.")
     private String verificationLevel;
 
-    @Column(name = "NsfwLevel", length = 32)
+    @Column(name = "NsfwLevel", length = 32, comment = "Age-restricted content level reported by Discord.")
     private String nsfwLevel;
 
-    @Column(name = "ExplicitContentFilter", length = 32)
+    @Column(name = "ExplicitContentFilter", length = 32, comment = "Explicit content filtering level.")
     private String explicitContentFilter;
 
-    @Column(name = "MfaLevel", length = 32)
+    @Column(name = "MfaLevel", length = 32, comment = "Multi-factor authentication requirement for moderation.")
     private String mfaLevel;
 
-    @Column(name = "SystemChannelID")
+    @Column(name = "SystemChannelID", comment = "Channel receiving server system messages.")
     private Long systemChannelID;
 
-    @Column(name = "RulesChannelID")
+    @Column(name = "RulesChannelID", comment = "Channel containing the server rules.")
     private Long rulesChannelID;
 
-    @Column(name = "AfkChannelID")
+    @Column(name = "AfkChannelID", comment = "Voice channel used for inactive members.")
     private Long afkChannelID;
 
-    @Column(name = "AfkTimeout")
+    @Column(name = "AfkTimeout", comment = "Idle time before a member is moved to the inactive channel.")
     private Integer afkTimeout;
 
-    @Column(name = "PremiumTier")
+    @Column(name = "PremiumTier", comment = "Premium tier reported for the server.")
     private Integer premiumTier;
 
 

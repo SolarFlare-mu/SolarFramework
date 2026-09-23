@@ -34,6 +34,12 @@
     <dependencies>
 
         <dependency>
+            <groupId>org.solarframework.mu</groupId>
+            <artifactId>core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-gateway-server-webflux</artifactId>
         </dependency>

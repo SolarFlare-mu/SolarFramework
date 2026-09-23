@@ -7,6 +7,8 @@ import org.solarframework.ai.IAIService;
 import org.springframework.ai.model.tool.ToolCallingManager;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.solarframework.ai.spring.AIRegistry.DefaultAIService;
+import static org.solarframework.ai.spring.AIRegistry.SolarAIManager;
 
 /** Needs no server: nothing here talks to a model. */
 class AIManagerTest {
@@ -126,5 +128,18 @@ class AIManagerTest {
         assertEquals(1, manager.getChatbotDefinitions().size());
         assertEquals("coder", manager.getChatbotDefinitions().getFirst().serviceName());
         assertEquals(9, manager.getChatbotDefinitions().getFirst().maxSteps());
+    }
+
+    @Test void closingRemovesTheManagersRegistrations() {
+        manager.addChatbot(manager.getDefaultService().createChatbot().name("support").build());
+
+        manager.close();
+        manager.close();
+
+        assertTrue(manager.getServices().isEmpty());
+        assertTrue(manager.getChatbots().isEmpty());
+        assertNull(manager.getDefaultService());
+        assertNull(SolarAIManager);
+        assertNull(DefaultAIService);
     }
 }

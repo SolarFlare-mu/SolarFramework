@@ -281,15 +281,33 @@ public class Main {
 - LM Studio (AI)
 
 ## Installation
-Add this Maven dependency to your Spring project:
+SolarFramework is published to GitHub Packages. It is public, but GitHub still asks for a classic token with
+`read:packages` and access to the repository, in `~/.m2/settings.xml`:
 
 ```xml
+<server>
+  <id>github</id>
+  <username>${env.GITHUB_ACTOR}</username>
+  <password>${env.GITHUB_TOKEN}</password>
+</server>
+```
 
+Then add the repository and the parent to your Spring project:
+
+```xml
 <parent>
-  <groupId>org.solarframework.pluginorg.solarframework.plugin</groupId>
+  <groupId>org.solarframework.mu</groupId>
   <artifactId>SolarFramework</artifactId>
   <version>1.0</version>
+  <relativePath/>
 </parent>
+
+<repositories>
+  <repository>
+    <id>github</id>
+    <url>https://maven.pkg.github.com/solarflare-mu/solarframework</url>
+  </repository>
+</repositories>
 ```
 Available Modules — `*API` holds the interfaces, `*Impl` the implementation, so add both of a pair:
 ```xml
@@ -304,4 +322,12 @@ Available Modules — `*API` holds the interfaces, `*Impl` the implementation, s
 <artifactId>Plugin</artifactId>           <artifactId>Language</artifactId>
 <artifactId>WebUtils</artifactId>         <artifactId>DatabaseEditor</artifactId>
 <artifactId>Discord</artifactId>          <artifactId>CertificateGenerator</artifactId>
+<artifactId>JavaRunner</artifactId>       <artifactId>PythonRunner</artifactId>       <artifactId>CSharpRunner</artifactId>
+```
+Each runner brings `RunnerAPI` with it. Keep a program running alongside the host:
+```java
+PythonRunner api = PythonRunner.module(Path.of("AI"), "app.main"); // uses AI/.venv when there is one
+api.start();
+api.awaitReady(() -> isAnswering(), Duration.ofMinutes(3));
+api.stop(); // the interpreter and everything it started
 ```

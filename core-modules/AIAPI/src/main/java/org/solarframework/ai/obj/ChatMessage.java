@@ -2,8 +2,8 @@ package org.solarframework.ai.obj;
 
 import com.google.gson.reflect.TypeToken;
 import jakarta.persistence.*;
-import org.solarframework.ai.enums.Role;
 import org.solarframework.ai.dto.ToolCall;
+import org.solarframework.ai.enums.Role;
 import org.solarframework.db.spring.DatabaseObject;
 
 import java.lang.reflect.Type;
@@ -21,7 +21,7 @@ import static org.solarframework.json.JSONItem.SimpleGSON;
  * are only ever read with the message, and they mean nothing apart from it.
  */
 @Entity
-@Table(name = "ai_chat_message")
+@Table(name = "ai_chat_message", comment = "Messages exchanged within stored assistant conversations.")
 public class ChatMessage extends DatabaseObject.ID_RECORD_OBJ<String, ChatMessage> {
 
     private static final Type TOOL_CALL_LIST = new TypeToken<List<ToolCall>>() {}.getType();
@@ -31,16 +31,16 @@ public class ChatMessage extends DatabaseObject.ID_RECORD_OBJ<String, ChatMessag
     @JoinColumn(referencedColumnName = "ID", name = "ConversationID", insertable = false, updatable = false)
     private Conversation conversation;
 
-    @Column(name = "ConversationID") private String conversationId;
-    @Column(name = "Position") private Integer position;
-    @Column(name = "Role", nullable = false) private String role;
-    @Lob @Column(name = "Content") private String content;
-    @Column(name = "ToolName") private String toolName;
+    @Column(name = "ConversationID", comment = "Conversation containing this message.") private String conversationId;
+    @Column(name = "Position", comment = "Position of the message in the conversation.") private Integer position;
+    @Column(name = "Role", nullable = false, comment = "Role of the message sender.") private String role;
+    @Lob @Column(name = "Content", comment = "Message text sent to or received from the model.") private String content;
+    @Column(name = "ToolName", comment = "Tool associated with this message.") private String toolName;
     // Named for its column, not for what it holds: the write path matches a field to a column by the field's own
     // name, so "toolCallsJson" was silently never written while the transient list below - which did match
     // "ToolCalls" - was handed to the query instead and failed as an unmappable parameter.
-    @Lob @Column(name = "ToolCalls") private String toolCalls;
-    @Column(name = "CreatedAt") private Instant createdAt = Instant.now();
+    @Lob @Column(name = "ToolCalls", comment = "JSON tool calls and their results associated with this message.") private String toolCalls;
+    @Column(name = "CreatedAt", comment = "Time the message was created.") private Instant createdAt = Instant.now();
 
     @Transient private List<ToolCall> parsedToolCalls;
 

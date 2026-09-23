@@ -28,6 +28,8 @@ public class EntityInfo extends IEntityInfo {
         this.className = clazz.getName();
         this.simpleClassName = clazz.getSimpleName();
         this.tableName = DatabaseObject.getTableName(clazz);
+        Table table = clazz.getAnnotation(Table.class);
+        this.tableComment = table == null ? "" : table.comment();
 
         try {
             Constructor<?> constructor = clazz.getDeclaredConstructor();

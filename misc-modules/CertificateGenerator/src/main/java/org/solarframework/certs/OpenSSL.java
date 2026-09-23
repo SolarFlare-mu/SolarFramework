@@ -49,9 +49,9 @@ public class OpenSSL {
             if (!OpenSSL.IsDownloaded()) if (OpenSSL.Download()) OpenSSL.Install();
             runCommandNoPrint(
                     OPENSSLPATH, "pkcs12", "-export",
-                    "-in", "./config/certs/ssldomains.pem",
-                    "-inkey", "./config/certs/ssldomains-key.pem",
-                    "-out", "config/certs/ssldomains.p12",
+                    "-in", MKCert.CERTIFICATE_FILE,
+                    "-inkey", MKCert.PRIVATE_KEY_FILE,
+                    "-out", MKCert.KEYSTORE_FILE,
                     "-name", "wildcard",
                     "-password", "pass:password"
             );

@@ -15,7 +15,7 @@ import java.util.UUID;
 import static org.solarframework.core.util.ImageUtils.getDominantColor;
 
 @Entity
-@Table(name = "discord_guildvariable")
+@Table(name = "discord_guildvariable", comment = "Named configuration values belonging to Discord servers.")
 @IdClass(Discord_GuildVariable.ServerNameID.class)
 public class Discord_GuildVariable extends DatabaseObject<Discord_GuildVariable> {
     @ManyToOne
@@ -23,14 +23,14 @@ public class Discord_GuildVariable extends DatabaseObject<Discord_GuildVariable>
     private Discord_GuildInfo DGI;
 
     @Id
-    @Column(name = "ServerID", nullable = false)
+    @Column(name = "ServerID", nullable = false, comment = "Discord server that owns this record.")
     private Long serverID;
 
     @Id
-    @Column(name = "Name", nullable = false)
+    @Column(name = "Name", nullable = false, comment = "Setting name within the Discord server.")
     private String name;
 
-    @Column(name = "Value", length = 4095)
+    @Column(name = "Value", length = 4095, comment = "Stored server setting value.")
     private String value;
 
     public Discord_GuildVariable() {}

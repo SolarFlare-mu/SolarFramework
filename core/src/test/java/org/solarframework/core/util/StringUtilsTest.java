@@ -9,6 +9,15 @@ import static org.junit.jupiter.api.Assertions.*;
 class StringUtilsTest {
 
     @Test
+    void generatedJavaStringsPreserveQuotesBackslashesAndControlCharacters() {
+        String text = "Owner's \"name\" at C:\\new\n\r\t\b\f\0";
+        assertEquals(text, StringUtils.escapeJava(text).translateEscapes());
+        assertEquals("", StringUtils.escapeJava(null));
+        assertEquals("Maurice — île", StringUtils.escapeJava("Maurice — île"));
+        assertEquals("\\\\u000a", StringUtils.escapeJava("\\u000a"));
+    }
+
+    @Test
     void replaceLastReplacesOnlyTheLastOccurrence() {
         assertEquals("a-b-x", StringUtils.replaceLast("a-b-c", "c", "x"));
         assertEquals("foo.bar.baz", StringUtils.replaceLast("foo,bar.baz", ",", "."));

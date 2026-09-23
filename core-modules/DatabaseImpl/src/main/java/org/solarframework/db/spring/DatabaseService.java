@@ -20,28 +20,33 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.solarframework.core.util.SolarHome;
 import org.solarframework.db.api.*;
 import org.solarframework.db.api.dto.DatabaseStats;
 import org.solarframework.db.api.dto.Row;
 import org.solarframework.db.api.dto.TableStats;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.stereotype.Service;
+import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.io.Writer;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -51,7 +56,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.solarframework.db.api.IEntityInfo.sortByDependency;
-import static org.solarframework.db.spring.DBInstanceService.IdFields;
 import static org.solarframework.db.spring.DatabaseConfig.defaultConnectionString;
 import static org.solarframework.db.spring.DatabaseObject.getTableName;
 import static org.solarframework.db.spring.DatabaseRegistry.SolarDBManager;
@@ -296,10 +300,13 @@ public class DatabaseService implements IDatabaseService {
 
     public synchronized SessionFactory getSessionFactory() {
         if (sessionFactory == null) {
+            DataSource source = getDataSource();
             BootstrapServiceRegistryBuilder bootstrap = new BootstrapServiceRegistryBuilder();
             getEntitiesClasses().stream().map(Class::getClassLoader).distinct().forEach(bootstrap::applyClassLoader);
+            // the dialect is named as a string too, so one shipped beside its driver needs that module's loader here
+            bootstrap.applyClassLoader(installedDriver().getClass().getClassLoader());
             StandardServiceRegistry registry = new StandardServiceRegistryBuilder(bootstrap.build())
-                    .applySetting("hibernate.connection.datasource", getDataSource())
+                    .applySetting("hibernate.connection.datasource", source)
                     .applySetting("hibernate.dialect", getDatabaseType().getDialectClass())
                     .applySetting("hibernate.enable_lazy_load_no_trans", "true")
                     .applySetting("hibernate.hbm2ddl.auto", "update")   // additive DDL at build time
@@ -343,13 +350,29 @@ public class DatabaseService implements IDatabaseService {
     public void setJpaBeans(JpaSourceRegistrar.JpaSourceBeans jpaBeans) {
         this.jpaBeans = jpaBeans;
     }
+    /** A relative SQLite file opens under the data folder; otherwise moving that folder left the database behind and quietly made an empty one. */
+    public String connectionStringToOpen() {
+        if (getDatabaseType() != DatabaseType.SQLITE) return getConnectionString();
+        String file = getConnectionString().substring(DatabaseType.SQLITE.getJdbcPrefix().length());
+        if (file.isBlank() || file.startsWith(":") || file.startsWith("file:")) return getConnectionString(); // :memory: and the URI form name no file on disk
+        return DatabaseType.SQLITE.getJdbcPrefix() + SolarHome.pathTo(file);
+    }
+
+    /** The pool is handed the driver itself: a name would be resolved through this classloader, the parent of every plugin's, so a driver shipped in a module is invisible to it - as it is to DriverManager. Falls back to the global manager because a source built by hand and never registered (a fresh connection reopened after a restart) has no manager of its own. */
+    private Driver installedDriver() {
+        Driver driver = (manager != null ? manager : SolarDBManager).findDriver(getDatabaseType().getDriverClass());
+        if (driver == null) throw new IllegalStateException("The driver for " + getDatabaseType().getDisplayName() + " is not installed. Install its driver module, then open this database again.");
+        return driver;
+    }
+
+
     public synchronized DataSource getDataSource() {
         if (this.dataSource != null) return dataSource;
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(getConnectionString());
+        config.setJdbcUrl(connectionStringToOpen());
         config.setUsername(getUsername());
         config.setPassword(getPassword());
-        config.setDriverClassName(getDatabaseType().getDriverClass());
+        config.setDataSource(new SimpleDriverDataSource(installedDriver(), connectionStringToOpen(), getUsername(), getPassword()));
 
         config.setMaximumPoolSize(getMaxPoolSize());
         config.setMinimumIdle(getMinimumIdle());
@@ -361,7 +384,8 @@ public class DatabaseService implements IDatabaseService {
         config.setPoolName("MyHikariPool-" + getName().replace(" ", "_"));
         return dataSource = new HikariDataSource(config);
     }
-    public synchronized void reload() {
+    /** Gives the pool and the Hibernate factory back. Spring's inferred destroy method for the bean, so a context closed in-process does not keep one more pool per restart; a source that was never opened has nothing to close. */
+    public synchronized void close() {
         try { sessionFactory.close(); } catch (Exception ignored) { }
         sessionFactory = null;
         metadata = null;
@@ -370,7 +394,9 @@ public class DatabaseService implements IDatabaseService {
         jdbcTemplate = null;
         transactionTemplate = null;
         jpaBeans = null; // built around the dataSource just closed above - stale until something re-registers it
-
+    }
+    public synchronized void reload() {
+        close();
         for (IEntityInfo EI : getEntities()) {
             manager.getEntityClassloaders().entrySet().stream().filter(cl -> Objects.equals(cl.getKey(), EI.getClassLoader())).findFirst().ifPresent((cl) -> {
                 try {
@@ -383,7 +409,7 @@ public class DatabaseService implements IDatabaseService {
     // ====== SHORT CUTS ======
 
     public <O> Optional<O> getSingleColumnOfTableById(String column, Class<O> item, Class<?> table, Object... id) {
-        return doQueryValueNoCache(item, "SELECT " + column + " FROM " + getTableName(table) + " WHERE " + DBInstanceService.idFieldsOf(table).stream().map(f -> DatabaseObject.columnOf(f) + " = ?").collect(Collectors.joining(" AND ")), id);
+        return doQueryValueNoCache(item, "SELECT " + column + " FROM " + getTableName(table) + " WHERE " + DBInstanceService.idFieldsOf(table).stream().map(f -> DatabaseObject.getColumnName(f) + " = ?").collect(Collectors.joining(" AND ")), id);
     }
     public <O> Optional<O> getSingleColumnOfTableWhere(String column, Class<O> item, Class<?> table, String where, Object... args) {
         return doQueryValueNoCache(item, "SELECT " + column + " FROM " + getTableName(table) + " WHERE " + where, args);
@@ -475,7 +501,7 @@ public class DatabaseService implements IDatabaseService {
         List<Field> lazy = DBInstanceService.lazyFieldsOf(clazz);
         List<String> columns = getTableStats(getTableName(clazz)).getColumnNames();
         if (columns.isEmpty()) return "*"; // table not created yet - nothing to enumerate, and not cached either
-        String select = Stream.concat(columns.stream().filter(c -> lazy.stream().noneMatch(f -> DatabaseObject.columnOf(f).equalsIgnoreCase(c))), lazy.stream().map(f -> "NULL AS " + DatabaseObject.columnOf(f))).collect(Collectors.joining(", "));
+        String select = Stream.concat(columns.stream().filter(c -> lazy.stream().noneMatch(f -> DatabaseObject.getColumnName(f).equalsIgnoreCase(c))), lazy.stream().map(f -> "NULL AS " + DatabaseObject.getColumnName(f))).collect(Collectors.joining(", "));
         LazySelects.put(clazz.getName(), select);
         return select;
     }
@@ -483,7 +509,7 @@ public class DatabaseService implements IDatabaseService {
 
     /** Bypasses the soft-delete filter on purpose - if the caller already has an ID, they get the row even if it was soft-deleted. */
     public <T> Optional<T> getById(String select, Class<T> clazz, Object... id) {
-        String where = DBInstanceService.idFieldsOf(clazz).stream().map(f -> DatabaseObject.columnOf(f) + " = ?").collect(Collectors.joining(" AND "));
+        String where = DBInstanceService.idFieldsOf(clazz).stream().map(f -> DatabaseObject.getColumnName(f) + " = ?").collect(Collectors.joining(" AND "));
         return this.doQuery(clazz, "SELECT " + select + " FROM " + getTableName(clazz) + " WHERE " + where, id);
     }
     public <T> Optional<T> getById(Class<T> clazz, Object... id) {
@@ -791,7 +817,7 @@ public class DatabaseService implements IDatabaseService {
             Map<String, Field> fields = new HashMap<>();
             for (Class<?> c = clazz; c != null && c != Object.class; c = c.getSuperclass()) {
                 // keyed by the column each field owns, not by the field's own name: a result alias is a column name
-                for (Field f : c.getDeclaredFields()) fields.putIfAbsent(DatabaseObject.columnOf(f).toLowerCase(), f);
+                for (Field f : c.getDeclaredFields()) fields.putIfAbsent(DatabaseObject.getColumnName(f).toLowerCase(), f);
             }
             for (TupleElement<?> el : tuple.getElements()) {
                 if (el.getAlias() == null) continue;
@@ -975,23 +1001,44 @@ public class DatabaseService implements IDatabaseService {
                         // Some databases may not support this
                     }
 
+                    // Get foreign keys - a schema that declares none (SQLite cannot ALTER one in) simply reports nothing
+                    try (ResultSet keys = metaData.getImportedKeys(con.getCatalog(), null, stats.tableName)) {
+                        while (keys.next()) {
+                            TableStats.Reference reference = new TableStats.Reference();
+                            reference.name = keys.getString("FK_NAME");
+                            reference.column = keys.getString("FKCOLUMN_NAME").toLowerCase();
+                            reference.table = keys.getString("PKTABLE_NAME").toLowerCase();
+                            reference.referencedColumn = keys.getString("PKCOLUMN_NAME").toLowerCase();
+                            stats.references.add(reference);
+                        }
+                    } catch (Exception e) {
+                        // Some databases may not support this
+                    }
+
                     // Get column details
                     try (ResultSet columns = metaData.getColumns(con.getCatalog(), null, stats.tableName, null)) {
                         while (columns.next()) {
                             String columnName = columns.getString("COLUMN_NAME").toLowerCase();
-                            TableStats.ColumnDetail detail = new TableStats.ColumnDetail();
+                            TableStats.Column detail = new TableStats.Column();
                             detail.name = columnName;
                             detail.type = columns.getString("TYPE_NAME");
+                            detail.dataType = columns.getInt("DATA_TYPE");
+                            detail.ordinalPosition = columns.getInt("ORDINAL_POSITION");
                             detail.size = columns.getInt("COLUMN_SIZE");
                             detail.decimalDigits = columns.getInt("DECIMAL_DIGITS");
                             detail.nullable = columns.getInt("NULLABLE") == 1;
                             detail.isAutoIncrement = "YES".equals(columns.getString("IS_AUTOINCREMENT"));
+                            detail.isGenerated = "YES".equals(columns.getString("IS_GENERATEDCOLUMN"));
                             detail.isPrimaryKey = primaryKeys.contains(columnName);
                             detail.isUnique = uniqueColumns.contains(columnName);
                             detail.defaultValue = columns.getString("COLUMN_DEF");
                             detail.remarks = columns.getString("REMARKS");
+                            stats.references.stream().filter(r -> r.column.equals(columnName)).findFirst().ifPresent(r -> {
+                                detail.referencesTable = r.table;
+                                detail.referencesColumn = r.referencedColumn;
+                            });
 
-                            stats.columnDetails.add(detail);
+                            stats.columns.add(detail);
                         }
                     }
 
@@ -1022,6 +1069,71 @@ public class DatabaseService implements IDatabaseService {
             Object result = withEm(this, em -> em.createNativeQuery(QueryCurrentDatabase(getDatabaseType())).getSingleResult());
             return result != null ? result.toString() : null;
         });
+    }
+
+    public void exportCsv(Path dir) {
+        try (Connection con = getDataSource().getConnection()) {
+            Files.createDirectories(dir);
+            con.setAutoCommit(false); // PostgreSQL only honours the fetch size - streams instead of buffering the table - inside a transaction; the pool rolls it back on return
+            DatabaseMetaData md = con.getMetaData();
+            List<String> tables = new ArrayList<>();
+            try (ResultSet rs = md.getTables(con.getCatalog(), con.getSchema(), "%", new String[]{"TABLE"})) {
+                while (rs.next()) tables.add(rs.getString("TABLE_NAME"));
+            }
+            if (getDatabaseType() == DatabaseType.SQLITE) tables.removeIf(t -> t.toLowerCase().startsWith("sqlite_"));
+            for (String t : tables) exportCsv(con, md, t, dir.resolve(t + ".csv"));
+        } catch (IOException e) {
+            throw new UncheckedIOException("CSV export of [" + getName() + "] to " + dir + " failed: " + e.getMessage(), e);
+        } catch (SQLException e) {
+            throw new IllegalStateException("CSV export of [" + getName() + "] failed: " + e.getMessage(), e);
+        }
+    }
+    private static void exportCsv(Connection con, DatabaseMetaData md, String table, Path file) throws SQLException, IOException {
+        String q = md.getIdentifierQuoteString().trim();
+        TreeMap<Short, String> keys = new TreeMap<>(); // the driver lists key columns by name, KEY_SEQ is their real order
+        try (ResultSet pk = md.getPrimaryKeys(con.getCatalog(), con.getSchema(), table)) {
+            while (pk.next()) keys.put(pk.getShort("KEY_SEQ"), q + pk.getString("COLUMN_NAME") + q);
+        }
+        String sql = "SELECT * FROM " + q + table + q + " ORDER BY " + (keys.isEmpty() ? "1" : String.join(", ", keys.values()));
+        try (Statement st = con.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY); Writer w = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
+            st.setFetchSize(1000);
+            try (ResultSet rs = st.executeQuery(sql)) {
+                ResultSetMetaData rm = rs.getMetaData();
+                int n = rm.getColumnCount();
+                boolean[] stamp = new boolean[n + 1];
+                for (int i = 1; i <= n; i++) {
+                    stamp[i] = rm.getColumnType(i) == Types.TIMESTAMP;
+                    w.write((i > 1 ? "," : "") + csvField(rm.getColumnName(i)));
+                }
+                w.write('\n');
+                while (rs.next()) {
+                    for (int i = 1; i <= n; i++) w.write((i > 1 ? "," : "") + csvField(csvValue(stamp[i] ? timestampOf(rs, i) : rs.getObject(i))));
+                    w.write('\n');
+                }
+            }
+        }
+    }
+    /** SQLite has no timestamp storage: Hibernate binds one as epoch millis in the JVM's zone, which only {@code getTimestamp} turns back into the wall-clock time written - {@code getObject} would print the bare number. A TEXT value the driver cannot parse is printed as stored. */
+    private static Object timestampOf(ResultSet rs, int i) throws SQLException {
+        try { return rs.getTimestamp(i); } catch (SQLException e) { return rs.getObject(i); }
+    }
+    /** What a driver hands back, as text a CSV reader parses back to the same value: never "null", never an exponent, never an array's identity hash. */
+    private static String csvValue(Object v) throws SQLException {
+        return switch (v) {
+            case null -> "";
+            case BigDecimal b -> b.toPlainString();
+            case Double d when Double.isFinite(d) -> BigDecimal.valueOf(d).stripTrailingZeros().toPlainString();
+            case Float f when Float.isFinite(f) -> new BigDecimal(f.toString()).stripTrailingZeros().toPlainString();
+            case Timestamp t -> t.toLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME).replace('T', ' ');
+            case LocalDateTime t -> t.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME).replace('T', ' ');
+            case byte[] b -> Base64.getEncoder().encodeToString(b);
+            case Blob b -> Base64.getEncoder().encodeToString(b.getBytes(1, (int) b.length()));
+            case Clob c -> c.getSubString(1, (int) c.length());
+            default -> v.toString();
+        };
+    }
+    private static String csvField(String s) {
+        return s.chars().anyMatch(c -> c == ',' || c == '"' || c == '\r' || c == '\n') ? "\"" + s.replace("\"", "\"\"") + "\"" : s;
     }
 
     // ====== SCHEMA ======

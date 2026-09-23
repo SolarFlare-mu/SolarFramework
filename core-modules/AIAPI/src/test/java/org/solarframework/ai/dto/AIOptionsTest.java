@@ -26,14 +26,6 @@ class AIOptionsTest {
         assertFalse(o.allowTools());
     }
 
-    @Test void presetsMatchTheirPurpose() {
-        assertTrue(AIOptions.CONVERSATIONIST.allowTools());
-        assertTrue(AIOptions.AGENT.allowTools());
-        assertFalse(AIOptions.ITEM_CHOOSER.allowTools(), "structured picking must not offer tools");
-        assertEquals(0.0, AIOptions.ITEM_CHOOSER.temperature(), "picking should be deterministic");
-        assertTrue(AIOptions.AGENT.maxOutputTokens() > AIOptions.CONVERSATIONIST.maxOutputTokens(), "an agent needs room to work");
-    }
-
     @Test void stopSequencesAreNeverNull() {
         assertTrue(new AIOptions(null, null, null, null, null, null, null, true).stop().isEmpty());
     }

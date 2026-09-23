@@ -2,6 +2,7 @@ package org.solarframework.proxyserver.obj;
 
 import org.junit.jupiter.api.Test;
 import org.solarframework.core.util.RateLimiter;
+import org.solarframework.proxyserver.obj.ratelimit.RateLimitRule;
 
 import java.util.List;
 

@@ -7,7 +7,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.solarframework.db.spring.DatabaseObject;
 import org.solarframework.db.test.obj.Order;
 import org.solarframework.db.test.obj.User;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.Instant;
 import java.util.List;

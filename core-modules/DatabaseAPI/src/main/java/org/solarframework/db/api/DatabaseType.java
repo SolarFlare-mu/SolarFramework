@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.solarframework.db.spring.DatabaseRegistry.SolarDBManager;
+
 public enum DatabaseType {
 
     POSTGRESQL(
@@ -76,7 +78,7 @@ public enum DatabaseType {
             "org.sqlite.JDBC",
             "jdbc:sqlite:",
             null,
-            "org.hibernate.community.dialect.SQLiteDialect",
+            "org.solarframework.db.spring.SolarSQLiteDialect",
             false,
             false,
             true,
@@ -255,6 +257,13 @@ public enum DatabaseType {
 
     public static DatabaseType fromDriver(String driver) {
         return Arrays.stream(values()).filter(type -> type.getDriverClass().equalsIgnoreCase(driver)).findFirst().orElse(null);
+    }
+    /** Whether this installation can open such a database at all - the driver is on the host or in a module that ships it. */
+    public boolean isDriverAvailable() {
+        return SolarDBManager != null && SolarDBManager.findDriver(driverClass) != null;
+    }
+    public static List<DatabaseType> available() {
+        return Arrays.stream(values()).filter(DatabaseType::isDriverAvailable).toList();
     }
 
 

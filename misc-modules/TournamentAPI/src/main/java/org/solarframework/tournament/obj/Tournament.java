@@ -37,7 +37,7 @@ import org.solarframework.tournament.util.Seeder;
  * type get real polymorphic dispatch instead of a downcast.
  */
 @Entity
-@Table(name = "tournament")
+@Table(name = "tournament", comment = "Tournament definitions, rules and lifecycle state.")
 public class Tournament extends DatabaseObject.ID_RECORD_OBJ<Long, Tournament> {
 
     // @OrderBy so the play order comes out of the load, not out of a sort on every read: getPhases() is shared
@@ -50,118 +50,118 @@ public class Tournament extends DatabaseObject.ID_RECORD_OBJ<Long, Tournament> {
     private List<Participant> participants = new ArrayList<>();
 
     // ---- identity -------------------------------------------------------------------------------
-    @Column(name = "Name", nullable = false, length = 200)
+    @Column(name = "Name", nullable = false, length = 200, comment = "Tournament name shown to entrants and spectators.")
     private String name;
-    @Column(name = "Slug", length = 200)
+    @Column(name = "Slug", length = 200, comment = "Address-friendly identifier for the tournament.")
     private String slug;
-    @Column(name = "Description", length = 4000)
+    @Column(name = "Description", length = 4000, comment = "Tournament description shown to readers.")
     private String description;
-    @Column(name = "GameName", length = 120)
+    @Column(name = "GameName", length = 120, comment = "Game played in the tournament.")
     private String gameName;
-    @Column(name = "Discipline", length = 120)
+    @Column(name = "Discipline", length = 120, comment = "Discipline or competition category.")
     private String discipline;
-    @Column(name = "OwnerRef", length = 120)
+    @Column(name = "OwnerRef", length = 120, comment = "Owner identifier supplied by the calling application.")
     private String ownerRef;
-    @Column(name = "ExternalRef", length = 200, unique = true)
+    @Column(name = "ExternalRef", length = 200, unique = true, comment = "Reference identifying this record in the calling application.")
     private String externalRef;
-    @Column(name = "Region", length = 80)
+    @Column(name = "Region", length = 80, comment = "Region in which the tournament is organised.")
     private String region;
-    @Column(name = "Timezone", length = 80)
+    @Column(name = "Timezone", length = 80, comment = "Time zone used to display tournament times.")
     private String timezone;
-    @Column(name = "RulesUrl", length = 512)
+    @Column(name = "RulesUrl", length = 512, comment = "Address of the tournament rules.")
     private String rulesUrl;
-    @Column(name = "BannerUrl", length = 512)
+    @Column(name = "BannerUrl", length = 512, comment = "Address of the tournament banner.")
     private String bannerUrl;
-    @Column(name = "IconUrl", length = 512)
+    @Column(name = "IconUrl", length = 512, comment = "Address of the tournament icon.")
     private String iconUrl;
-    @Column(name = "AccentColor", length = 9)
+    @Column(name = "AccentColor", length = 9, comment = "Accent colour used when rendering the tournament.")
     private String accentColor;
 
     // ---- state ----------------------------------------------------------------------------------
     @Convert(converter = TournamentStatusConverter.class)
-    @Column(name = "Status", nullable = false, length = 32, columnDefinition = "VARCHAR(32) NOT NULL DEFAULT 'DRAFT'")
+    @Column(name = "Status", nullable = false, length = 32, columnDefinition = "VARCHAR(32) NOT NULL DEFAULT 'DRAFT'", comment = "Current tournament state.")
     private TournamentStatus status = TournamentStatus.DRAFT;
-    @Column(name = "CurrentPhaseIndex", columnDefinition = "INT DEFAULT 0")
+    @Column(name = "CurrentPhaseIndex", columnDefinition = "INT DEFAULT 0", comment = "Index of the current tournament phase.")
     private Integer currentPhaseIndex = 0;
     /** Off, a finished phase is still ranked and closed but the next one is not drawn and the run is not
      *  finished either: something outside decides when to move on. Nullable so rows written before the
      *  column existed - and every consumer that never touches it - keep advancing on their own. */
-    @Column(name = "AutoAdvancePhases")
+    @Column(name = "AutoAdvancePhases", comment = "Whether completing a phase starts the next phase automatically.")
     private Boolean autoAdvancePhases;
-    @Column(name = "IsPublic", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 1")
+    @Column(name = "IsPublic", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 1", comment = "Whether the tournament is publicly visible.")
     private boolean isPublic = true;
-    @Column(name = "BracketVisible", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 1")
+    @Column(name = "BracketVisible", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 1", comment = "Whether the bracket is visible to spectators.")
     private boolean bracketVisible = true;
 
     // ---- format ---------------------------------------------------------------------------------
     /** 1 for 1v1, 2 for 2v2, 5 for 5v5... Drives how many members a participant may roster. */
-    @Column(name = "TeamSize", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 1")
+    @Column(name = "TeamSize", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 1", comment = "Number of members required in each team.")
     private int teamSize = 1;
-    @Column(name = "MinParticipants", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 2")
+    @Column(name = "MinParticipants", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 2", comment = "Minimum entrants required to start.")
     private int minParticipants = 2;
-    @Column(name = "MaxParticipants", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    @Column(name = "MaxParticipants", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0", comment = "Maximum entrants accepted; zero leaves the limit unset.")
     private int maxParticipants = 0;
     /** With a cap set, entrants arriving into a full field queue up instead of being turned away. */
-    @Column(name = "WaitlistEnabled", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 1")
+    @Column(name = "WaitlistEnabled", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 1", comment = "Whether excess registrations may join a waitlist.")
     private boolean waitlistEnabled = true;
     /** A team may register before its roster is filled, but with this set it may not take the floor short. */
-    @Column(name = "RequireCompleteRosters", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 1")
+    @Column(name = "RequireCompleteRosters", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 1", comment = "Whether teams need a complete roster to participate.")
     private boolean requireCompleteRosters = true;
     /** Default series length for matches; 1 is a single match, 3 is a BO3. */
-    @Column(name = "DefaultBestOf", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 1")
+    @Column(name = "DefaultBestOf", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 1", comment = "Default maximum games in a match series.")
     private int defaultBestOf = 1;
-    @Column(name = "ThirdPlaceMatch", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 1")
+    @Column(name = "ThirdPlaceMatch", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 1", comment = "Whether a third-place match is played.")
     private boolean thirdPlaceMatch = true;
-    @Column(name = "GrandFinalReset", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 1")
+    @Column(name = "GrandFinalReset", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 1", comment = "Whether the grand final resets when the losers-bracket finalist wins.")
     private boolean grandFinalReset = true;
-    @Column(name = "DrawAllowed", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0")
+    @Column(name = "DrawAllowed", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0", comment = "Whether a match may end in a draw.")
     private boolean drawAllowed = false;
     @Convert(converter = SeedingMethodConverter.class)
-    @Column(name = "SeedingMethod", nullable = false, length = 32, columnDefinition = "VARCHAR(32) NOT NULL DEFAULT 'MANUAL'")
+    @Column(name = "SeedingMethod", nullable = false, length = 32, columnDefinition = "VARCHAR(32) NOT NULL DEFAULT 'MANUAL'", comment = "Method used to assign entrants to starting slots.")
     private SeedingMethod seedingMethod = SeedingMethod.MANUAL;
-    @Column(name = "RandomSeed", nullable = false, columnDefinition = "BIGINT NOT NULL DEFAULT 0")
+    @Column(name = "RandomSeed", nullable = false, columnDefinition = "BIGINT NOT NULL DEFAULT 0", comment = "Seed used to reproduce random bracket placement.")
     private long randomSeed = 0L;
     /** How a match's winner is decided; each phase inherits this as its default and may override it. */
     @Convert(converter = MatchDecisionModeConverter.class)
-    @Column(name = "MatchDecisionMode", nullable = false, length = 32, columnDefinition = "VARCHAR(32) NOT NULL DEFAULT 'GAMES_WON'")
+    @Column(name = "MatchDecisionMode", nullable = false, length = 32, columnDefinition = "VARCHAR(32) NOT NULL DEFAULT 'GAMES_WON'", comment = "Rule used to decide the match winner from game results.")
     private MatchDecisionMode matchDecisionMode = MatchDecisionMode.GAMES_WON;
 
     // ---- points ---------------------------------------------------------------------------------
-    @Column(name = "PointsPerWin", nullable = false, columnDefinition = "DOUBLE NOT NULL DEFAULT 3")
+    @Column(name = "PointsPerWin", nullable = false, columnDefinition = "DOUBLE NOT NULL DEFAULT 3", comment = "Standings points awarded for a win.")
     private double pointsPerWin = 3;
-    @Column(name = "PointsPerDraw", nullable = false, columnDefinition = "DOUBLE NOT NULL DEFAULT 1")
+    @Column(name = "PointsPerDraw", nullable = false, columnDefinition = "DOUBLE NOT NULL DEFAULT 1", comment = "Standings points awarded for a draw.")
     private double pointsPerDraw = 1;
-    @Column(name = "PointsPerLoss", nullable = false, columnDefinition = "DOUBLE NOT NULL DEFAULT 0")
+    @Column(name = "PointsPerLoss", nullable = false, columnDefinition = "DOUBLE NOT NULL DEFAULT 0", comment = "Standings points awarded for a loss.")
     private double pointsPerLoss = 0;
-    @Column(name = "PointsPerBye", nullable = false, columnDefinition = "DOUBLE NOT NULL DEFAULT 3")
+    @Column(name = "PointsPerBye", nullable = false, columnDefinition = "DOUBLE NOT NULL DEFAULT 3", comment = "Standings points awarded for a bye.")
     private double pointsPerBye = 3;
-    @Column(name = "PointsPerForfeit", nullable = false, columnDefinition = "DOUBLE NOT NULL DEFAULT 0")
+    @Column(name = "PointsPerForfeit", nullable = false, columnDefinition = "DOUBLE NOT NULL DEFAULT 0", comment = "Standings points awarded for a forfeit.")
     private double pointsPerForfeit = 0;
-    @Column(name = "Tiebreakers", length = 400)
+    @Column(name = "Tiebreakers", length = 400, comment = "Ordered tiebreaker rules used when standings points are equal.")
     private String tiebreakers = TournamentEnums.join(Tiebreaker.DEFAULT_GROUP);
 
     // ---- registration ---------------------------------------------------------------------------
-    @Column(name = "CheckInRequired", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0")
+    @Column(name = "CheckInRequired", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0", comment = "Whether entrants must check in before play.")
     private boolean checkInRequired = false;
-    @Column(name = "CheckInMinutes", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 30")
+    @Column(name = "CheckInMinutes", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 30", comment = "Length of the check-in window in minutes.")
     private int checkInMinutes = 30;
-    @Column(name = "AllowLateRegistration", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0")
+    @Column(name = "AllowLateRegistration", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0", comment = "Whether registration is allowed after the normal window.")
     private boolean allowLateRegistration = false;
-    @Column(name = "RegistrationOpensAt")
+    @Column(name = "RegistrationOpensAt", comment = "Time registration opens.")
     private Instant registrationOpensAt;
-    @Column(name = "RegistrationClosesAt")
+    @Column(name = "RegistrationClosesAt", comment = "Time registration closes.")
     private Instant registrationClosesAt;
-    @Column(name = "StartsAt")
+    @Column(name = "StartsAt", comment = "Scheduled tournament start time.")
     private Instant startsAt;
-    @Column(name = "EndsAt")
+    @Column(name = "EndsAt", comment = "Tournament end time.")
     private Instant endsAt;
 
     // ---- prizing / podium -----------------------------------------------------------------------
-    @Column(name = "PrizePool")
+    @Column(name = "PrizePool", comment = "Total prize amount advertised for the tournament.")
     private Double prizePool;
-    @Column(name = "Currency", length = 8)
+    @Column(name = "Currency", length = 8, comment = "Currency used for monetary amounts.")
     private String currency;
-    @Column(name = "EntryFee")
+    @Column(name = "EntryFee", comment = "Entry fee recorded for each entrant.")
     private Double entryFee;
     // No podium columns: the placings are Participant.finalRank, which finish() writes for every entrant and
     // which is what the standings, the profile pages and the exports already read. Three columns holding the

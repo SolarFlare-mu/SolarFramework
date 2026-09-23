@@ -27,7 +27,10 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 public class AIConfig {
 
-    @Bean
+    /** Where a host keeps its endpoints and agents unless it says otherwise - one folder per area under config/, as {@code DatabaseConfig.FILE} and {@code MailConfig.FILE} do. The manager is not loaded from it here: an installation with no AI in it should never open the file at all, so whoever starts the stack reads it. */
+    public static final String FILE = "config/ai/agents.json";
+
+    @Bean(destroyMethod = "close")
     public IAIManager solarAIManager(ObjectProvider<ToolCallingManager> toolCalling, @Value("${spring.ai.openai.base-url:#{null}}") String baseUrl, @Value("${spring.ai.openai.api-key:N/A}") String apiKey, @Value("${spring.ai.openai.chat.options.model:#{null}}") String model, @Value("${solar.ai.timeout-seconds:300}") int timeoutSeconds) {
         AIManager manager = new AIManager(toolCalling.getIfAvailable(() -> ToolCallingManager.builder().build()));
         if (baseUrl != null) manager.makeNewService(IAIService.DEFAULT, baseUrl, apiKey, model).setTimeoutSeconds(timeoutSeconds);

@@ -1,7 +1,5 @@
 package org.solarframework.lang;
 
-import java.util.Arrays;
-
 import static org.solarframework.core.util.StringUtils.similarity;
 
 public enum Nationalities {

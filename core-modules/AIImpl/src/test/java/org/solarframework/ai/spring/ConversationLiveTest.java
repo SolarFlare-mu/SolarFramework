@@ -4,8 +4,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.solarframework.ai.Chatbot;
-import org.solarframework.ai.obj.Conversation;
 import org.solarframework.ai.memory.Memory;
+import org.solarframework.ai.obj.Conversation;
 
 import java.util.ArrayList;
 import java.util.List;

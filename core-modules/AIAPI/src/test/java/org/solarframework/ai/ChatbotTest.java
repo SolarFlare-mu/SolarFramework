@@ -5,7 +5,6 @@ import org.solarframework.ai.dto.AIOptions;
 import org.solarframework.ai.dto.ChatbotDefinition;
 import org.solarframework.ai.dto.ToolCall;
 import org.solarframework.ai.memory.Memory;
-import org.solarframework.ai.obj.ChatMessage;
 import org.solarframework.ai.obj.Conversation;
 
 import java.util.List;

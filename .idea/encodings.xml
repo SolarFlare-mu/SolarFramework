@@ -10,6 +10,8 @@
     <file url="file://$PROJECT_DIR$/core-modules/AI/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core-modules/AIAPI/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core-modules/AIImpl/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core-modules/BackupAPI/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core-modules/BackupImpl/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core-modules/Database-API/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core-modules/DatabaseA/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core-modules/DatabaseAPI/src/main/java" charset="UTF-8" />
@@ -21,6 +23,8 @@
     <file url="file://$PROJECT_DIR$/core-modules/Excels/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core-modules/JSON/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core-modules/Language/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core-modules/MailerAPI/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core-modules/MailerImpl/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core-modules/Plugin/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core-modules/SearchAPI/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core-modules/SearchImpl/src/main/java" charset="UTF-8" />
@@ -31,6 +35,10 @@
     <file url="file://$PROJECT_DIR$/misc-modules/Discord/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/misc-modules/TournamentAPI/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/misc-modules/TournamentImpl/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/runners/CSharpRunner/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/runners/JavaRunner/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/runners/PythonRunner/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/runners/RunnerAPI/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/untitled/src/main/java" charset="UTF-8" />

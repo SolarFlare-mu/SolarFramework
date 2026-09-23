@@ -6,6 +6,7 @@ import org.solarframework.db.api.dto.TableStats;
 import org.solarframework.db.spring.DatabaseObject;
 
 import javax.sql.DataSource;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -132,6 +133,16 @@ public interface IDatabaseService {
     int createOrReplaceView(String viewName, String sql);
     int createOrReplaceFunction(String sql);
     int createOrReplaceProcedure(String sql);
+
+    /**
+     * Writes every table of this source - never a view, nor SQLite's own {@code sqlite_*} tables - to {@code dir/<table>.csv},
+     * creating {@code dir} if missing. RFC 4180, UTF-8 without BOM, {@code \n} line ends; the header is the database's own
+     * column names, rows are ordered by primary key (else by the first column), NULL is an empty field and numbers are
+     * never in scientific notation. Rows are streamed, so a table of any size is never held in memory.
+     * @throws java.io.UncheckedIOException if a file cannot be written
+     * @throws IllegalStateException if a table cannot be read
+     */
+    void exportCsv(Path dir);
 
     interface ENTITY<T> {
 

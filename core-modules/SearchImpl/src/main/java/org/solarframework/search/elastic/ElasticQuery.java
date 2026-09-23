@@ -1,10 +1,6 @@
 package org.solarframework.search.elastic;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.google.gson.*;
 import org.solarframework.search.dto.SearchDocument;
 import org.solarframework.search.dto.SearchQuery;
 

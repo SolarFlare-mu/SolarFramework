@@ -32,7 +32,8 @@ public class Row {
      * row's own business to sort out rather than every caller's.
      */
     public Object valueOf(String column) {
-        return columns.entrySet().stream().filter(e -> e.getKey().equalsIgnoreCase(column)).map(Map.Entry::getValue).findFirst().orElse(null);
+        // findFirst() throws on a null element, so the entry is found first and only then read - a NULL cell is an answer, not an error
+        return columns.entrySet().stream().filter(e -> e.getKey().equalsIgnoreCase(column)).findFirst().map(Map.Entry::getValue).orElse(null);
     }
 
     public Optional<String> getAsStringOptional(String fieldName) {

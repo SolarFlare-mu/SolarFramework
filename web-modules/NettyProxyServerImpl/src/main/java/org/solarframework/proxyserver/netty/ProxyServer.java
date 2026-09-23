@@ -8,9 +8,7 @@ import io.netty.handler.ssl.SslContextBuilder;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.solarframework.core.util.RateLimiter;
-import org.solarframework.proxyserver.obj.BaseDomain;
-import org.solarframework.proxyserver.obj.RateLimitRule;
+import org.solarframework.proxyserver.obj.domains.BaseDomain;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.client.HttpClient;
@@ -27,7 +25,7 @@ import java.nio.file.Path;
 import java.security.KeyStore;
 import java.util.Map;
 
-import static org.solarframework.proxyserver.netty.ProxyService.WAMPSERVER;
+import static org.solarframework.proxyserver.netty.ProxyService.PROXYSERVER;
 
 public class ProxyServer {
     private final Logger log = LoggerFactory.getLogger(ProxyServer.class);
@@ -74,11 +72,11 @@ public class ProxyServer {
     // --- routing ---
 
     private Publisher<Void> route(HttpServerRequest req, HttpServerResponse res) {
-        String host = WAMPSERVER.stripPort(req.requestHeaders().get(HttpHeaderNames.HOST));
-        BaseDomain<?> d = (host == null) ? null : WAMPSERVER.getDomainOfHost(host);
+        String host = PROXYSERVER.stripPort(req.requestHeaders().get(HttpHeaderNames.HOST));
+        BaseDomain<?> d = (host == null) ? null : PROXYSERVER.getDomainOfHost(host);
         if (d == null) return res.status(HttpResponseStatus.NOT_FOUND).send();
 
-        ProxyService.PermitOutcome permit = WAMPSERVER.takePermit(clientIp(req), host, req.fullPath());
+        ProxyService.PermitOutcome permit = PROXYSERVER.takePermit(clientIp(req), host, req.fullPath());
         if (!permit.allowed()) {
             log.warn("Refused: {} is not on the allow list for {}{}", clientIp(req), host, req.fullPath());
             ProxyService.notifyRefusal(clientIp(req), host, req.fullPath(), 0, permit.contributed(), true);

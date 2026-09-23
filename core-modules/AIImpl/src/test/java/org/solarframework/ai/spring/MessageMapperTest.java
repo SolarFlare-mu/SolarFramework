@@ -1,8 +1,8 @@
 package org.solarframework.ai.spring;
 
 import org.junit.jupiter.api.Test;
-import org.solarframework.ai.obj.ChatMessage;
 import org.solarframework.ai.dto.ToolCall;
+import org.solarframework.ai.obj.ChatMessage;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.ToolResponseMessage;

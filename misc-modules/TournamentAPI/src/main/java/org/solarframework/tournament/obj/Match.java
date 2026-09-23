@@ -38,7 +38,7 @@ import org.solarframework.tournament.util.StandingsCalculator;
  * double-elimination bracket. That makes advancing a result a local operation.
  */
 @Entity
-@Table(name = "tournament_match")
+@Table(name = "tournament_match", comment = "Matches scheduled within tournament phases.")
 public class Match extends DatabaseObject.ID_RECORD_OBJ<Long, Match> {
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -50,91 +50,91 @@ public class Match extends DatabaseObject.ID_RECORD_OBJ<Long, Match> {
     @OrderBy("gameNumber")
     private List<MatchGame> games = new ArrayList<>();
 
-    @Column(name = "TournamentID", nullable = false)
+    @Column(name = "TournamentID", nullable = false, comment = "Tournament containing this record.")
     private Long tournamentID;
-    @Column(name = "PhaseID", nullable = false)
+    @Column(name = "PhaseID", nullable = false, comment = "Phase containing this record.")
     private Long phaseID;
 
     // ---- position in the schedule ---------------------------------------------------------------
     @Convert(converter = BracketSideConverter.class)
-    @Column(name = "BracketSide", nullable = false, length = 32, columnDefinition = "VARCHAR(32) NOT NULL DEFAULT 'WINNERS'")
+    @Column(name = "BracketSide", nullable = false, length = 32, columnDefinition = "VARCHAR(32) NOT NULL DEFAULT 'WINNERS'", comment = "Bracket in which the match is played.")
     private BracketSide bracketSide = BracketSide.WINNERS;
     /** 1-based round within its bracket side. */
-    @Column(name = "Round", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 1")
+    @Column(name = "Round", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 1", comment = "Round number within the bracket.")
     private int round = 1;
     /** 0-based index within the round, top to bottom. */
-    @Column(name = "Position", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    @Column(name = "Position", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0", comment = "Position of the match within its round.")
     private int position = 0;
     /** Human-facing sequential number within the phase. */
-    @Column(name = "MatchNumber", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    @Column(name = "MatchNumber", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0", comment = "Match number displayed in the bracket.")
     private int matchNumber = 0;
-    @Column(name = "GroupIndex")
+    @Column(name = "GroupIndex", comment = "Group containing this record; zero for an ungrouped phase.")
     private Integer groupIndex;
-    @Column(name = "Label", length = 120)
+    @Column(name = "Label", length = 120, comment = "Display label for the match.")
     private String label;
 
     // ---- entrants -------------------------------------------------------------------------------
-    @Column(name = "ParticipantID1")
+    @Column(name = "ParticipantID1", comment = "Entrant occupying the first match slot.")
     private Long participantID1;
-    @Column(name = "ParticipantID2")
+    @Column(name = "ParticipantID2", comment = "Entrant occupying the second match slot.")
     private Long participantID2;
     /** Placeholder text shown while a slot is unresolved, e.g. "Winner of M12". */
-    @Column(name = "Slot1Label", length = 120)
+    @Column(name = "Slot1Label", length = 120, comment = "Placeholder label for the first slot before its entrant is known.")
     private String slot1Label;
-    @Column(name = "Slot2Label", length = 120)
+    @Column(name = "Slot2Label", length = 120, comment = "Placeholder label for the second slot before its entrant is known.")
     private String slot2Label;
 
     // ---- result ---------------------------------------------------------------------------------
-    @Column(name = "Score1", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    @Column(name = "Score1", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0", comment = "Score recorded for the first participant.")
     private int score1 = 0;
-    @Column(name = "Score2", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    @Column(name = "Score2", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0", comment = "Score recorded for the second participant.")
     private int score2 = 0;
     /** Raw points aggregated over every game (rounds, goals, kills...) - used for tiebreakers. */
-    @Column(name = "PointsFor1", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    @Column(name = "PointsFor1", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0", comment = "Game points accumulated by the first participant.")
     private int pointsFor1 = 0;
-    @Column(name = "PointsFor2", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    @Column(name = "PointsFor2", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0", comment = "Game points accumulated by the second participant.")
     private int pointsFor2 = 0;
-    @Column(name = "BestOf", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 1")
+    @Column(name = "BestOf", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 1", comment = "Maximum number of games in each match series.")
     private int bestOf = 1;
     @Convert(converter = MatchStateConverter.class)
-    @Column(name = "State", nullable = false, length = 32, columnDefinition = "VARCHAR(32) NOT NULL DEFAULT 'PENDING'")
+    @Column(name = "State", nullable = false, length = 32, columnDefinition = "VARCHAR(32) NOT NULL DEFAULT 'PENDING'", comment = "Current state of the match.")
     private MatchState state = MatchState.PENDING;
-    @Column(name = "WinnerID")
+    @Column(name = "WinnerID", comment = "Participant that won; empty until a winner is known.")
     private Long winnerID;
-    @Column(name = "LoserID")
+    @Column(name = "LoserID", comment = "Participant that lost; empty until a loser is known.")
     private Long loserID;
-    @Column(name = "Forfeit1", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0")
+    @Column(name = "Forfeit1", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0", comment = "Whether the first participant forfeited.")
     private boolean forfeit1 = false;
-    @Column(name = "Forfeit2", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0")
+    @Column(name = "Forfeit2", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0", comment = "Whether the second participant forfeited.")
     private boolean forfeit2 = false;
 
     // ---- progression ----------------------------------------------------------------------------
-    @Column(name = "NextMatchID")
+    @Column(name = "NextMatchID", comment = "Match receiving this match's winner.")
     private Long nextMatchID;
     /** 1 or 2 - which slot of the next match the winner takes. */
-    @Column(name = "NextMatchSlot")
+    @Column(name = "NextMatchSlot", comment = "Slot receiving the winner in the next match.")
     private Integer nextMatchSlot;
-    @Column(name = "NextLoserMatchID")
+    @Column(name = "NextLoserMatchID", comment = "Match receiving this match's loser.")
     private Long nextLoserMatchID;
-    @Column(name = "NextLoserMatchSlot")
+    @Column(name = "NextLoserMatchSlot", comment = "Slot receiving the loser in the next match.")
     private Integer nextLoserMatchSlot;
-    @Column(name = "SourceMatchID1")
+    @Column(name = "SourceMatchID1", comment = "Match supplying the first slot.")
     private Long sourceMatchID1;
-    @Column(name = "SourceMatchID2")
+    @Column(name = "SourceMatchID2", comment = "Match supplying the second slot.")
     private Long sourceMatchID2;
 
     // ---- scheduling -----------------------------------------------------------------------------
-    @Column(name = "ScheduledAt")
+    @Column(name = "ScheduledAt", comment = "Scheduled start time of the match.")
     private Instant scheduledAt;
-    @Column(name = "StartedAt")
+    @Column(name = "StartedAt", comment = "Time play started.")
     private Instant startedAt;
-    @Column(name = "CompletedAt")
+    @Column(name = "CompletedAt", comment = "Time play finished.")
     private Instant completedAt;
-    @Column(name = "Station", length = 80)
+    @Column(name = "Station", length = 80, comment = "Station assigned to host the match.")
     private String station;
-    @Column(name = "StreamUrl", length = 512)
+    @Column(name = "StreamUrl", length = 512, comment = "Address of the match broadcast.")
     private String streamUrl;
-    @Column(name = "Notes", length = 2000)
+    @Column(name = "Notes", length = 2000, comment = "Additional notes about this record.")
     private String notes;
 
     public Match() {}

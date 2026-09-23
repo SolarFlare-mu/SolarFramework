@@ -15,7 +15,7 @@ import static org.solarframework.db.spring.DatabaseRegistry.SolarDBManager;
 import static org.solarframework.discord.utils.UserUtils.getUserByID;
 
 @Entity
-@Table(name = "discord_profile")
+@Table(name = "discord_profile", comment = "Discord user profiles known to framework integrations.")
 public class Discord_Profile extends DatabaseObject.ID_OBJ<Long, Discord_Profile> {
     private transient User User;
 
@@ -24,25 +24,25 @@ public class Discord_Profile extends DatabaseObject.ID_OBJ<Long, Discord_Profile
 
     private transient Object extender;
 
-    @Column(name = "Name", nullable = false, length = 32)
+    @Column(name = "Name", nullable = false, length = 32, comment = "Discord username.")
     private String name;
 
-    @Column(name = "EffectiveName", length = 64)
+    @Column(name = "EffectiveName", length = 64, comment = "Display name resolved by Discord.")
     private String effectiveName;
 
-    @Column(name = "GlobalName", length = 32)
+    @Column(name = "GlobalName", length = 32, comment = "Global display name set by the Discord user.")
     private String globalName;
 
-    @Column(name = "Discriminator", length = 8)
+    @Column(name = "Discriminator", length = 8, comment = "Legacy numeric discriminator associated with the username.")
     private String discriminator;
 
-    @Column(name = "AvatarUrl", length = 512)
+    @Column(name = "AvatarUrl", length = 512, comment = "Address of the profile image.")
     private String avatarUrl;
 
-    @Column(name = "EffectiveAvatarUrl", length = 512)
+    @Column(name = "EffectiveAvatarUrl", length = 512, comment = "Address of the avatar resolved by Discord.")
     private String effectiveAvatarUrl;
 
-    @Column(name = "AsTag", length = 64)
+    @Column(name = "AsTag", length = 64, comment = "Discord username formatted with its discriminator.")
     private String asTag;
 
 

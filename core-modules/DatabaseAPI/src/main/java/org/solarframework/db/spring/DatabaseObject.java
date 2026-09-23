@@ -9,7 +9,9 @@ import org.solarframework.db.api.Identified;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.solarframework.db.spring.DatabaseRegistry.DefaultDBService;
@@ -32,13 +34,8 @@ public class DatabaseObject<T> {
             return clazz.getSimpleName().toLowerCase();
         });
     }
-    /**
-     * The column a field is stored in - its own name, unless {@code @Column(name = ...)} says otherwise. The same
-     * question {@link #getTableName} answers for a class, and it lives beside it for the same reason: insert, update,
-     * select, the row mapper and every screen that names a column all have to agree, and they can only be sure of
-     * that by asking one method rather than each carrying the rule.
-     */
-    public static String columnOf(Field field) {
+
+    public static String getColumnName(Field field) {
         Column column = field.getAnnotation(Column.class);
         return column == null || column.name().isBlank() ? field.getName() : column.name();
     }
@@ -180,11 +177,11 @@ public class DatabaseObject<T> {
      */
     @MappedSuperclass
     public static class RECORD_OBJ<T> extends DatabaseObject<T> {
-        @Column(name = "CreatedAt", nullable = false)
+        @Column(name = "CreatedAt", nullable = false, comment = "Time the record was created.")
         private Instant createdAt;
-        @Column(name = "UpdatedAt", nullable = false)
+        @Column(name = "UpdatedAt", nullable = false, comment = "Time the record was last updated.")
         private Instant updatedAt;
-        @Column(name = "DeletedAt")
+        @Column(name = "DeletedAt", comment = "Time the record was marked as deleted; empty while active.")
         private Instant deletedAt;
 
         public Instant getCreatedAt() {
@@ -237,7 +234,7 @@ public class DatabaseObject<T> {
     @MappedSuperclass
     public static class ID_OBJ<IDTYPE, T> extends DatabaseObject<T> implements org.solarframework.db.api.Identified<IDTYPE> {
         @Id
-        @Column(name = "ID")
+        @Column(name = "ID", comment = "Unique identifier of the record.")
         public IDTYPE ID;
 
         @Override
@@ -253,7 +250,7 @@ public class DatabaseObject<T> {
     @MappedSuperclass
     public static class ID_RECORD_OBJ<IDTYPE, T> extends RECORD_OBJ<T> implements Identified<IDTYPE> {
         @Id
-        @Column(name = "ID")
+        @Column(name = "ID", comment = "Unique identifier of the record.")
         public IDTYPE ID;
 
         @Override

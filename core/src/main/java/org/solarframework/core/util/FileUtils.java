@@ -10,8 +10,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Comparator;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Scanner;
+import java.util.stream.Stream;
 
 public class FileUtils {
     private static final Logger log = LoggerFactory.getLogger(FileUtils.class);
@@ -45,6 +48,67 @@ public class FileUtils {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    /** The extension in lower case and without its dot, or "" when the name has none. A name that is only a dotted prefix (".env") counts as having none. */
+    public static String getExtension(String fileName) {
+        String name = safeFileName(fileName, "", null);
+        int dot = name.lastIndexOf('.');
+        return dot <= 0 || dot == name.length() - 1 ? "" : name.substring(dot + 1).toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * The last segment of a name that came from outside, in either slash, without the control characters and quotes
+     * that would break a download header, and ending in the extension the file actually is - a wrong one replaced, a
+     * missing one added, a null extension leaving the name alone. A header saying {@code cv.docx} on a PDF opens the
+     * wrong program on the reader's machine.
+     */
+    public static String safeFileName(String given, String fallback, String extension) {
+        String name = fallback;
+        if (!StringUtils.isBlank(given)) {
+            String last = given.substring(Math.max(given.lastIndexOf('/'), given.lastIndexOf('\\')) + 1).replaceAll("[\\p{Cntrl}\"]", "").trim();
+            if (!last.isEmpty()) name = last;
+        }
+        String wanted = StringUtils.isBlank(extension) ? "" : extension.replaceFirst("^\\.", "").toLowerCase(Locale.ROOT);
+        // matched without regard to case, so a name its author wrote as CV.PDF is left as they wrote it
+        if (wanted.isEmpty() || wanted.equals(getExtension(name))) return name;
+        int dot = name.lastIndexOf('.');
+        return (dot > 0 ? name.substring(0, dot) : name) + "." + wanted;
+    }
+
+    /** Copies a file, or a whole folder into {@code to}, making the folders it needs on the way. */
+    public static void copyTree(Path from, Path to) throws IOException {
+        if (!Files.isDirectory(from)) {
+            copyFile(from, to);
+            return;
+        }
+        try (Stream<Path> tree = Files.walk(from)) {
+            for (Path file : tree.filter(Files::isRegularFile).toList()) copyFile(file, to.resolve(from.relativize(file)));
+        }
+    }
+    private static void copyFile(Path from, Path to) throws IOException {
+        Files.createDirectories(to.getParent());
+        Files.copy(from, to, StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    /** Deepest first, since a folder cannot be deleted before what is in it. */
+    public static boolean deleteTree(Path folder) {
+        try (Stream<Path> tree = Files.walk(folder)) {
+            tree.sorted(Comparator.reverseOrder()).forEach(path -> path.toFile().delete());
+            return !Files.exists(folder);
+        } catch (Exception e) {
+            log.error("Could not delete {}: {}", folder, e.getMessage());
+            return false;
+        }
+    }
+
+    /** Every file under it, added up. 0 when there is nothing there or it cannot be read. */
+    public static long sizeOf(Path folder) {
+        try (Stream<Path> tree = Files.walk(folder)) {
+            return tree.filter(Files::isRegularFile).mapToLong(path -> path.toFile().length()).sum();
+        } catch (Exception _) {
+            return 0;
         }
     }
 

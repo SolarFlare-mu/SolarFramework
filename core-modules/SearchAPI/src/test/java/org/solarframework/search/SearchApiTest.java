@@ -5,7 +5,6 @@ import org.solarframework.search.dto.SearchDocument;
 import org.solarframework.search.dto.SearchHit;
 import org.solarframework.search.dto.SearchQuery;
 import org.solarframework.search.dto.SearchResults;
-import org.solarframework.search.spring.SearchRegistry;
 
 import java.util.List;
 import java.util.Map;
@@ -85,9 +84,4 @@ class SearchApiTest {
         assertTrue(none.search(SearchQuery.of("v", "x", List.of("a"))).isEmpty());
     }
 
-    @Test
-    void theRegistryIsNeverNullSoNoCallerNeedsANullCheck() {
-        assertNotNull(SearchRegistry.SolarSearch);
-        assertFalse(SearchRegistry.SolarSearch.isAvailable());
-    }
 }

@@ -1,6 +1,6 @@
 package org.solarframework.proxyserver;
 
-import org.solarframework.proxyserver.obj.Domain;
+import org.solarframework.proxyserver.obj.domains.Domain;
 import org.solarframework.proxyserver.netty.ProxyBuilder;
 import org.solarframework.proxyserver.netty.ProxyServer;
 

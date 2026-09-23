@@ -2,13 +2,19 @@ package org.solarframework.db.test.transactional;
 
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
-import org.solarframework.db.spring.DatabaseService;
-import org.solarframework.db.spring.JpaSourceRegistrar;
-import org.solarframework.db.spring.TransactionResolver;
+import org.solarframework.db.api.IEntityInfo;
+import org.solarframework.db.spring.*;
 import org.solarframework.db.test.SolarH2Test;
+import org.solarframework.db.test.obj.PluginLoadedRecord;
 import org.solarframework.db.test.obj.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.transaction.support.TransactionTemplate;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.solarframework.db.spring.DatabaseRegistry.SolarDBManager;
@@ -46,6 +52,36 @@ class JpaSourceRegistrarTest {
     }
 
     @Test
+    void transactionManagerRecognizesPluginLoadedEntities() throws Exception {
+        DatabaseService source = (DatabaseService) SolarDBManager.getDefaultService();
+        List<IEntityInfo> originalEntities = List.copyOf(source.getEntities());
+        ClassLoader pluginLoader = new ChildFirstEntityLoader(PluginLoadedRecord.class);
+        Class<?> pluginRecord = pluginLoader.loadClass(PluginLoadedRecord.class.getName());
+        try {
+            SolarDBManager.addEntityClassLoader("plugin-test", pluginLoader);
+            source.setEntities(List.of(new EntityInfo(pluginRecord, "plugin-test")));
+            source.createSchemaIfMissing(List.of(pluginRecord));
+
+            JpaSourceRegistrar.JpaSourceBeans beans = JpaSourceRegistrar.register(source, context);
+            TransactionTemplate tx = new TransactionTemplate(beans.transactionManager());
+            Constructor<?> constructor = pluginRecord.getConstructor(Long.class, String.class);
+
+            tx.execute(status -> {
+                try {
+                    ((DatabaseObject<?>) constructor.newInstance(777L, "Plugin row")).Upsert();
+                    return null;
+                } catch (ReflectiveOperationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+            assertEquals(1, source.doQueryValue(Long.class, "SELECT COUNT(*) FROM plugin_loaded_record WHERE ID = ?", 777L).orElseThrow());
+        } finally {
+            source.setEntities(originalEntities);
+        }
+    }
+
+    @Test
     void unregisterClosesTheFactoryAndRemovesTheBeans() {
         DatabaseService source = (DatabaseService) SolarDBManager.getDefaultService();
         JpaSourceRegistrar.JpaSourceBeans beans = JpaSourceRegistrar.register(source, context);
@@ -76,5 +112,35 @@ class JpaSourceRegistrarTest {
 
         assertNotNull(beans);
         assertTrue(context.getBeanFactory().containsSingleton(source.jpaBeanName() + "_emf"), "getJpaBeans() must have built it on this call");
+    }
+
+    private static class ChildFirstEntityLoader extends ClassLoader {
+        private final String entityName;
+
+        ChildFirstEntityLoader(Class<?> entity) {
+            super(entity.getClassLoader());
+            this.entityName = entity.getName();
+        }
+
+        @Override
+        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+            if (!name.equals(entityName)) return super.loadClass(name, resolve);
+            Class<?> loaded = findLoadedClass(name);
+            if (loaded == null) loaded = findClass(name);
+            if (resolve) resolveClass(loaded);
+            return loaded;
+        }
+
+        @Override
+        protected Class<?> findClass(String name) throws ClassNotFoundException {
+            String resource = "/" + name.replace('.', '/') + ".class";
+            try (InputStream in = PluginLoadedRecord.class.getResourceAsStream(resource)) {
+                if (in == null) throw new ClassNotFoundException(name);
+                byte[] bytes = in.readAllBytes();
+                return defineClass(name, bytes, 0, bytes.length);
+            } catch (IOException e) {
+                throw new ClassNotFoundException(name, e);
+            }
+        }
     }
 }

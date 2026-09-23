@@ -6,27 +6,34 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="TestApp" />
+        <module name="MailerImpl" />
         <module name="CertificateGenerator" />
+        <module name="BackupImpl" />
         <module name="TournamentImpl" />
         <module name="SpringProxyServerImplV2" />
-        <module name="AIAPI" />
         <module name="DatabaseEditor" />
+        <module name="JSON" />
+        <module name="TournamentAPI" />
+        <module name="CSharpRunner" />
+        <module name="RunnerAPI" />
+        <module name="Excel" />
+        <module name="MailerAPI" />
+        <module name="JavaRunner" />
+        <module name="Language" />
+        <module name="Discord" />
+        <module name="SearchAPI" />
+        <module name="PythonRunner" />
+        <module name="BackupAPI" />
+        <module name="AIAPI" />
         <module name="WebUtils" />
         <module name="NettyProxyServerImpl" />
-        <module name="JSON" />
         <module name="DatabaseAPI" />
         <module name="ProxyServerAPI" />
-        <module name="TournamentAPI" />
         <module name="DatabaseA" />
         <module name="core" />
-        <module name="Excel" />
-        <module name="Language" />
         <module name="DatabaseImpl" />
         <module name="AIImpl" />
-        <module name="Discord" />
         <module name="SpringProxyServerImplV1" />
-        <module name="SearchAPI" />
         <module name="SearchImpl" />
         <module name="Plugin" />
       </profile>
@@ -45,6 +52,7 @@
       <module name="ProxyServer" target="25" />
       <module name="ProxyServerImpl" target="25" />
       <module name="StaffAuthenticationAPI" target="25" />
+      <module name="TestApp" target="25" />
       <module name="web-modules" target="25" />
       <module name="ZIP" target="25" />
     </bytecodeTargetLevel>
@@ -56,6 +64,9 @@
       <module name="AIImpl" options="-parameters" />
       <module name="AuthenticationAPI" options="-parameters" />
       <module name="AuthenticationImpl" options="-parameters" />
+      <module name="BackupAPI" options="-parameters" />
+      <module name="BackupImpl" options="-parameters" />
+      <module name="CSharpRunner" options="-parameters" />
       <module name="CertificateGenerator" options="-parameters" />
       <module name="DatabaseAPI" options="-parameters" />
       <module name="DatabaseCommon" options="-parameters" />
@@ -68,12 +79,17 @@
       <module name="Excel" options="-parameters" />
       <module name="File" options="-parameters" />
       <module name="JSON" options="-parameters" />
+      <module name="JavaRunner" options="-parameters" />
       <module name="Language" options="-parameters" />
+      <module name="MailerAPI" options="-parameters" />
+      <module name="MailerImpl" options="-parameters" />
       <module name="NettyProxyServerImpl" options="-parameters" />
       <module name="Plugin" options="-parameters" />
       <module name="ProxyServer" options="-parameters" />
       <module name="ProxyServerAPI" options="-parameters" />
       <module name="ProxyServerImpl" options="-parameters" />
+      <module name="PythonRunner" options="-parameters" />
+      <module name="RunnerAPI" options="-parameters" />
       <module name="SearchAPI" options="-parameters" />
       <module name="SearchImpl" options="-parameters" />
       <module name="SolarFramework" options="-parameters" />

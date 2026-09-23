@@ -1,9 +1,9 @@
 package org.solarframework.ai.spring;
 
-import org.solarframework.ai.Chatbot;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.solarframework.ai.Chatbot;
 
 import java.util.ArrayList;
 import java.util.List;

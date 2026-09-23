@@ -2,18 +2,21 @@ package org.solarframework.ai.spring;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.solarframework.ai.*;
-import org.solarframework.ai.dto.*;
-import org.solarframework.ai.obj.ChatMessage;
-import org.solarframework.ai.obj.Conversation;
 import org.slf4j.MDC;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.MessageType;
+import org.solarframework.ai.IAIService;
+import org.solarframework.ai.dto.AIOptions;
+import org.solarframework.ai.dto.TokenUsage;
+import org.solarframework.ai.dto.ToolCall;
+import org.solarframework.ai.dto.TurnResult;
 import org.solarframework.ai.exception.AIException;
 import org.solarframework.ai.lmstudio.LMStudioModelManager;
+import org.solarframework.ai.obj.ChatMessage;
+import org.solarframework.ai.obj.Conversation;
 import org.solarframework.core.util.RateLimiter;
 import org.solarframework.core.util.StringUtils;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatModel;
@@ -26,11 +29,16 @@ import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.ai.openai.api.ResponseFormat;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.core.retry.RetryPolicy;
+import org.springframework.core.retry.RetryTemplate;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -310,7 +318,9 @@ public class AIService implements IAIService {
                 .apiKey(apiKey == null || apiKey.isBlank() ? "N/A" : apiKey)
                 .restClientBuilder(RestClient.builder().requestFactory(requests))
                 .build();
-        return chatModel = OpenAiChatModel.builder().openAiApi(api).toolCallingManager(toolCallingManager).build();
+        // No retries: Spring AI's default template tries 10 times with back-off, so one timeout from a slow local
+        // model became many minutes of waiting and a model kept busy. A failed call now fails once, and the caller decides.
+        return chatModel = OpenAiChatModel.builder().openAiApi(api).toolCallingManager(toolCallingManager).retryTemplate(new RetryTemplate(RetryPolicy.withMaxRetries(0))).build();
     }
 
     ToolCallingManager toolCallingManager() { return toolCallingManager; }

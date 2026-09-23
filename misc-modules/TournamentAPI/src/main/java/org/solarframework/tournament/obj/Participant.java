@@ -20,7 +20,7 @@ import org.solarframework.tournament.util.Ids;
  * never an individual member, so the same match code serves every team size.
  */
 @Entity
-@Table(name = "tournament_participant")
+@Table(name = "tournament_participant", comment = "Entrants registered in tournaments.")
 public class Participant extends DatabaseObject.ID_RECORD_OBJ<Long, Participant> {
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -30,48 +30,48 @@ public class Participant extends DatabaseObject.ID_RECORD_OBJ<Long, Participant>
     @OneToMany(mappedBy = "participant", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ParticipantMember> members = new ArrayList<>();
 
-    @Column(name = "TournamentID", nullable = false)
+    @Column(name = "TournamentID", nullable = false, comment = "Tournament containing this record.")
     private Long tournamentID;
-    @Column(name = "Name", nullable = false, length = 160)
+    @Column(name = "Name", nullable = false, length = 160, comment = "Entrant's display name.")
     private String name;
-    @Column(name = "Tag", length = 32)
+    @Column(name = "Tag", length = 32, comment = "Short entrant tag shown beside the name.")
     private String tag;
     /** 1-based; 1 is the strongest entrant. 0 means unseeded. */
-    @Column(name = "Seed", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    @Column(name = "Seed", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0", comment = "Tournament-wide starting seed assigned to the entrant.")
     private int seed = 0;
     @Convert(converter = ParticipantStatusConverter.class)
-    @Column(name = "Status", nullable = false, length = 32, columnDefinition = "VARCHAR(32) NOT NULL DEFAULT 'REGISTERED'")
+    @Column(name = "Status", nullable = false, length = 32, columnDefinition = "VARCHAR(32) NOT NULL DEFAULT 'REGISTERED'", comment = "Registration and participation state of the entrant.")
     private ParticipantStatus status = ParticipantStatus.REGISTERED;
-    @Column(name = "Rating")
+    @Column(name = "Rating", comment = "Rating used when seeding the entrant.")
     private Double rating;
-    @Column(name = "Country", length = 4)
+    @Column(name = "Country", length = 4, comment = "Country represented by the entrant.")
     private String country;
-    @Column(name = "AvatarUrl", length = 512)
+    @Column(name = "AvatarUrl", length = 512, comment = "Address of the profile image.")
     private String avatarUrl;
-    @Column(name = "ColorCode", length = 9)
+    @Column(name = "ColorCode", length = 9, comment = "Colour used to represent the entrant.")
     private String colorCode;
-    @Column(name = "ExternalRef", length = 200)
+    @Column(name = "ExternalRef", length = 200, comment = "Reference identifying this record in the calling application.")
     private String externalRef;
-    @Column(name = "ContactEmail", length = 200)
+    @Column(name = "ContactEmail", length = 200, comment = "Contact email address for the entrant.")
     private String contactEmail;
-    @Column(name = "Notes", length = 2000)
+    @Column(name = "Notes", length = 2000, comment = "Additional notes about this record.")
     private String notes;
 
-    @Column(name = "CheckedIn", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0")
+    @Column(name = "CheckedIn", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0", comment = "Whether the entrant has checked in.")
     private boolean checkedIn = false;
-    @Column(name = "CheckedInAt")
+    @Column(name = "CheckedInAt", comment = "Time the entrant checked in.")
     private Instant checkedInAt;
-    @Column(name = "RegisteredAt")
+    @Column(name = "RegisteredAt", comment = "Time the entrant registered.")
     private Instant registeredAt;
-    @Column(name = "WithdrawnAt")
+    @Column(name = "WithdrawnAt", comment = "Time the entrant withdrew.")
     private Instant withdrawnAt;
 
     /** Final placement across the whole tournament, 1 = champion. 0 while still playing. */
-    @Column(name = "FinalRank", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    @Column(name = "FinalRank", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0", comment = "Final tournament placing assigned to the entrant.")
     private int finalRank = 0;
-    @Column(name = "EliminatedInPhaseID")
+    @Column(name = "EliminatedInPhaseID", comment = "Phase in which the entrant was eliminated.")
     private Long eliminatedInPhaseID;
-    @Column(name = "EliminatedInRound")
+    @Column(name = "EliminatedInRound", comment = "Round in which the entrant was eliminated.")
     private Integer eliminatedInRound;
 
     protected Participant() {}

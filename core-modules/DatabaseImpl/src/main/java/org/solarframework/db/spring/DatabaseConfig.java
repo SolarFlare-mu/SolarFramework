@@ -39,6 +39,10 @@ import java.util.concurrent.TimeUnit;
 @EnableCaching
 @EnableTransactionManagement
 public class DatabaseConfig {
+
+    /** Where a host keeps its data sources unless it says otherwise - one folder per area under config/, as {@code AIConfig.FILE} and {@code MailConfig.FILE} do. The manager is not loaded from it here: a host reads the file at the point in its own start-up where the entity classes it names already exist. */
+    public static final String FILE = "config/data/database.json";
+
     protected static String defaultConnectionString;
 
     /** The default source, seeded from {@code spring.datasource.*} - the {@code @Value} fields on {@link DatabaseService} are injected into it as they were when it was a {@code @Service}, and a plain application sets the same values through the setters instead. */
@@ -47,7 +51,7 @@ public class DatabaseConfig {
         return new DatabaseService(databaseCacheManager());
     }
 
-    @Bean
+    @Bean(destroyMethod = "close")
     public DatabaseManager solarDBManager(DatabaseService solarDefaultDataSource, ConfigurableApplicationContext context) {
         return new DatabaseManager(databaseCacheManager(), solarDefaultDataSource, context);
     }

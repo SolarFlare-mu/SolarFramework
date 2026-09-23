@@ -6,18 +6,13 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.solarframework.ai.Chatbot;
 import org.solarframework.ai.Prompts;
-import org.solarframework.ai.dto.AIOptions;
-import org.solarframework.ai.dto.AgentRun;
-import org.solarframework.ai.dto.TokenUsage;
-import org.solarframework.ai.dto.ToolCall;
-import org.solarframework.ai.dto.TurnResult;
+import org.solarframework.ai.dto.*;
 import org.solarframework.ai.memory.Memory;
 import org.solarframework.db.spring.DatabaseObject;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -33,7 +28,7 @@ import static org.solarframework.db.spring.DatabaseRegistry.SolarDBManager;
  * {@link org.solarframework.ai.IAIService}, so it is provider-neutral.
  */
 @Entity
-@Table(name = "ai_conversation")
+@Table(name = "ai_conversation", comment = "Stored conversations between users and assistants.")
 public class Conversation extends DatabaseObject.ID_RECORD_OBJ<String, Conversation> {
 
     private static final Logger log = LoggerFactory.getLogger(Conversation.class);
@@ -52,15 +47,15 @@ public class Conversation extends DatabaseObject.ID_RECORD_OBJ<String, Conversat
     @OrderBy("Position")
     private List<ChatMessage> messages;
 
-    @Column(name = "Owner") private String owner;
-    @Column(name = "BotID") private String botId;
-    @Column(name = "Model") private String model;
-    @Lob @Column(name = "Summary") private String summary;
-    @Column(name = "PromptTokens") private Long promptTokens = 0L;
-    @Column(name = "CompletionTokens") private Long completionTokens = 0L;
-    @Column(name = "CreatedAt") private Instant createdAt = Instant.now();
-    @Column(name = "UpdatedAt") private Instant updatedAt = Instant.now();
-    @Column(name = "ExpiresAt") private Instant expiresAt;
+    @Column(name = "Owner", comment = "Owner identifier used to separate conversations.") private String owner;
+    @Column(name = "BotID", comment = "Chatbot associated with the conversation.") private String botId;
+    @Column(name = "Model", comment = "Model used for the conversation.") private String model;
+    @Lob @Column(name = "Summary", comment = "Condensed context retained from earlier messages.") private String summary;
+    @Column(name = "PromptTokens", comment = "Total prompt tokens recorded for the conversation.") private Long promptTokens = 0L;
+    @Column(name = "CompletionTokens", comment = "Total completion tokens recorded for the conversation.") private Long completionTokens = 0L;
+    @Column(name = "CreatedAt", comment = "Time the record was created.") private Instant createdAt = Instant.now();
+    @Column(name = "UpdatedAt", comment = "Time the record was last updated.") private Instant updatedAt = Instant.now();
+    @Column(name = "ExpiresAt", comment = "Time after which the conversation may be removed.") private Instant expiresAt;
 
     @Transient
     private Chatbot bot;

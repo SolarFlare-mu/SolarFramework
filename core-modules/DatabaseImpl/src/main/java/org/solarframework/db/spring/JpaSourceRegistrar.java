@@ -1,17 +1,19 @@
 package org.solarframework.db.spring;
 
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.spi.PersistenceUnitInfo;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-import jakarta.persistence.spi.PersistenceUnitInfo;
 import org.springframework.orm.jpa.persistenceunit.PersistenceUnitManager;
 import org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Builds a real, Spring-managed EntityManagerFactory + JpaTransactionManager for one DatabaseService, so
@@ -29,7 +31,7 @@ public final class JpaSourceRegistrar {
         // Raw field read, not the getJpaBeans() getter - that getter calls back into register() when the
         // field is null, which would recurse forever on exactly the call this check exists to short-circuit.
         if (source.jpaBeans != null) return source.jpaBeans;
-        SpringPersistenceUnitInfo mutableInfo = new SpringPersistenceUnitInfo(source.getClass().getClassLoader());
+        SpringPersistenceUnitInfo mutableInfo = new SpringPersistenceUnitInfo(new EntityClassLoader(source.getEntitiesClasses(), source.getClass().getClassLoader()));
         mutableInfo.setPersistenceUnitName(source.jpaBeanName());
         mutableInfo.setPersistenceProviderClassName(HibernatePersistenceProvider.class.getName());
         mutableInfo.setNonJtaDataSource(source.getDataSource());
@@ -84,5 +86,21 @@ public final class JpaSourceRegistrar {
         beanFactory.destroySingleton(source.jpaBeanName() + "_txManager");
         source.setJpaBeans(null);
         beans.entityManagerFactory().close();
+    }
+
+    private static class EntityClassLoader extends ClassLoader {
+        private final Map<String, Class<?>> entities;
+
+        EntityClassLoader(List<Class<?>> entities, ClassLoader parent) {
+            super(parent);
+            this.entities = entities.stream().collect(Collectors.toMap(Class::getName, c -> c, (first, _) -> first));
+        }
+
+        @Override
+        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+            Class<?> entity = entities.get(name);
+            if (entity != null) return entity;
+            return super.loadClass(name, resolve);
+        }
     }
 }

@@ -8,7 +8,6 @@ import org.solarframework.db.spring.DatabaseObject;
 import org.solarframework.db.spring.DatabaseService;
 import org.solarframework.db.test.obj.Order;
 import org.solarframework.db.test.obj.User;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.Instant;
 import java.util.List;
@@ -337,7 +336,7 @@ class DatabaseCoherencyTest {
         assertDoesNotThrow(() -> DatabaseObject.UpsertAll(List.of(u)), "a transient field must not reach the query");
         assertEquals(1, SolarDBManager.Count(User.class));
 
-        // Since 31 Aug 2026 the whole path names columns through DatabaseObject.columnOf, so the String that
+        // Since 31 Aug 2026 the whole path names columns through DatabaseObject.getColumnName, so the String that
         // owns "Tags" is written and read back under that name however it is called in Java, while the transient
         // List named after the same column stays the object's own business.
         assertEquals("kept", fetchUser(1).getTagsText(), "a field whose column is named differently must still be written");

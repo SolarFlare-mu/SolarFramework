@@ -23,43 +23,43 @@ import org.solarframework.tournament.util.Ids;
  * players and the per-side total is a trivial sum, not something worth its own relation.
  */
 @Entity
-@Table(name = "tournament_match_game")
+@Table(name = "tournament_match_game", comment = "Individual games used to decide a tournament match.")
 public class MatchGame extends DatabaseObject.ID_RECORD_OBJ<Long, MatchGame> {
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(referencedColumnName = "ID", name = "MatchID", nullable = false, insertable = false, updatable = false)
     private Match match;
 
-    @Column(name = "MatchID", nullable = false)
+    @Column(name = "MatchID", nullable = false, comment = "Match containing this game.")
     private Long matchID;
     /** 1-based game number within the series. */
-    @Column(name = "GameNumber", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 1")
+    @Column(name = "GameNumber", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 1", comment = "Game number within the match series.")
     private int gameNumber = 1;
-    @Column(name = "Score1", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    @Column(name = "Score1", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0", comment = "Score recorded for the first participant.")
     private int score1 = 0;
-    @Column(name = "Score2", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    @Column(name = "Score2", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0", comment = "Score recorded for the second participant.")
     private int score2 = 0;
-    @Column(name = "WinnerID")
+    @Column(name = "WinnerID", comment = "Participant that won; empty until a winner is known.")
     private Long winnerID;
-    @Column(name = "IsTie", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0")
+    @Column(name = "IsTie", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0", comment = "Whether the game ended in a tie.")
     private boolean isTie = false;
-    @Column(name = "Forfeited", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0")
+    @Column(name = "Forfeited", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0", comment = "Whether the game was decided by a forfeit.")
     private boolean forfeited = false;
     /** Map, stage, board colour - whatever varies game to game. */
-    @Column(name = "Stage", length = 160)
+    @Column(name = "Stage", length = 160, comment = "Map or stage on which the game was played.")
     private String stage;
-    @Column(name = "StartedAt")
+    @Column(name = "StartedAt", comment = "Time play started.")
     private Instant startedAt;
-    @Column(name = "CompletedAt")
+    @Column(name = "CompletedAt", comment = "Time play finished.")
     private Instant completedAt;
-    @Column(name = "DurationSeconds")
+    @Column(name = "DurationSeconds", comment = "Duration of the game in seconds.")
     private Integer durationSeconds;
-    @Column(name = "Notes", length = 1000)
+    @Column(name = "Notes", length = 1000, comment = "Additional notes about this record.")
     private String notes;
     /** CSV of "participantMemberID=points" - a team's score for this game is the sum of its own members' entries. */
-    @Column(name = "PlayerPoints", length = 2000)
+    @Column(name = "PlayerPoints", length = 2000, comment = "Per-player game points stored as comma-separated member and points pairs.")
     private String playerPoints;
-    @Column(name = "ExternalRef", length = 200)
+    @Column(name = "ExternalRef", length = 200, comment = "Reference identifying this record in the calling application.")
     private String externalRef;
 
     protected MatchGame() {}

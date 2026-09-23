@@ -5,10 +5,10 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.solarframework.ai.AITool;
 import org.solarframework.ai.Chatbot;
-import org.solarframework.ai.obj.ChatMessage;
-import org.solarframework.ai.obj.Conversation;
 import org.solarframework.ai.dto.AgentRun;
 import org.solarframework.ai.dto.ToolCall;
+import org.solarframework.ai.obj.ChatMessage;
+import org.solarframework.ai.obj.Conversation;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -10,10 +10,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.solarframework.db.spring.DatabaseRegistry.SolarDBManager;
-
 @Entity
-@Table(name = "user")
+@Table(name = "user", comment = "Users referenced by database integration test orders.")
 public class User extends DatabaseObject.ID_RECORD_OBJ<Long, User> {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

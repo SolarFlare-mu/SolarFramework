@@ -9,14 +9,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.Paths;
 
-import static org.solarframework.proxyserver.spring.ProxyService.WAMPSERVER;
+import static org.solarframework.proxyserver.spring.ProxyService.PROXYSERVER;
 
 @RestController
 public class ProxyController {
 
     @GetMapping("/**")
     public ResponseEntity<Resource> serve(HttpServletRequest request, @RequestHeader("Host") String host) throws Exception {
-        String baseDir = WAMPSERVER.stripPort(WAMPSERVER.getDomainOfHost(host.split(":")[0]).getPath());
+        String baseDir = PROXYSERVER.stripPort(PROXYSERVER.getDomainOfHost(host.split(":")[0]).getPath());
         if (baseDir == null) return ResponseEntity.notFound().build();
         String filePath = request.getRequestURI().substring(request.getContextPath().length());
         if (filePath.contains("..")) return ResponseEntity.badRequest().build();

@@ -1,8 +1,5 @@
 package org.solarframework.ai;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.solarframework.ai.dto.AgentRun;
 import org.solarframework.ai.obj.Conversation;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

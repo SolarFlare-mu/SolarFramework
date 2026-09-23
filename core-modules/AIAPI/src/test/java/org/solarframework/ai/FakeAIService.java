@@ -1,7 +1,9 @@
 package org.solarframework.ai;
 
-import org.solarframework.ai.dto.*;
-import org.solarframework.ai.enums.ProgrammingLanguage;
+import org.solarframework.ai.dto.AIOptions;
+import org.solarframework.ai.dto.TokenUsage;
+import org.solarframework.ai.dto.ToolCall;
+import org.solarframework.ai.dto.TurnResult;
 import org.solarframework.ai.obj.ChatMessage;
 
 import java.util.ArrayDeque;

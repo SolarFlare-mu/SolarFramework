@@ -1,7 +1,7 @@
 package org.solarframework.proxyserver.spring;
 
 import org.jspecify.annotations.NonNull;
-import org.solarframework.proxyserver.obj.BaseDomain;
+import org.solarframework.proxyserver.obj.domains.BaseDomain;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.solarframework.proxyserver.spring.ProxyService.WAMPSERVER;
+import static org.solarframework.proxyserver.spring.ProxyService.PROXYSERVER;
 
 @Component
 public class StaticSiteFilter implements WebFilter, Ordered {
@@ -30,8 +30,8 @@ public class StaticSiteFilter implements WebFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, @NonNull WebFilterChain chain) {
-        String host = WAMPSERVER.stripPort(exchange.getRequest().getHeaders().getFirst(HttpHeaders.HOST));
-        BaseDomain<?> d = WAMPSERVER.getDomainOfHost(host);
+        String host = PROXYSERVER.stripPort(exchange.getRequest().getHeaders().getFirst(HttpHeaders.HOST));
+        BaseDomain<?> d = PROXYSERVER.getDomainOfHost(host);
 
         if (d == null || d.isProxy()) return chain.filter(exchange);
         try {

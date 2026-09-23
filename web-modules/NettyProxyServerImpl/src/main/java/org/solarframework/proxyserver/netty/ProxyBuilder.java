@@ -1,12 +1,12 @@
 package org.solarframework.proxyserver.netty;
 
-import org.solarframework.proxyserver.obj.Domain;
-import org.solarframework.proxyserver.obj.RateLimitRule;
+import org.solarframework.proxyserver.obj.domains.Domain;
+import org.solarframework.proxyserver.obj.ratelimit.RateLimitRule;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.solarframework.proxyserver.netty.ProxyService.WAMPSERVER;
+import static org.solarframework.proxyserver.netty.ProxyService.PROXYSERVER;
 
 public class ProxyBuilder {
     public static final String LOCALHOST = "127.0.0.1";
@@ -37,6 +37,6 @@ public class ProxyBuilder {
     }
 
     public ProxyService build() throws Exception {
-        return WAMPSERVER = new ProxyService(domains, rateRules, regenCerts);
+        return PROXYSERVER = new ProxyService(domains, rateRules, regenCerts);
     }
 }

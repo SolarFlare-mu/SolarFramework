@@ -1,7 +1,6 @@
 package org.solarframework.db.spring;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ScanResult;
 import jakarta.persistence.ManyToMany;
@@ -10,30 +9,27 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.solarframework.core.util.StringUtils;
 import org.solarframework.db.api.*;
 import org.solarframework.db.api.dto.DatabaseStats;
 import org.solarframework.db.api.dto.TableStats;
 import org.solarframework.db.exception.DataMigrationException;
-import org.solarframework.json.JSONItem;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.sql.Driver;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static org.solarframework.core.util.ClassUtils.*;
-import static org.solarframework.db.spring.DBInstanceService.CachedFields;
-import static org.solarframework.db.spring.DBInstanceService.LazyFields;
-import static org.solarframework.db.spring.DBInstanceService.IdFields;
+import static org.solarframework.db.spring.DBInstanceService.*;
 import static org.solarframework.db.spring.DatabaseConfig.defaultConnectionString;
 import static org.solarframework.db.spring.DatabaseObject.*;
 import static org.solarframework.db.spring.DatabaseRegistry.DefaultDBService;
@@ -52,6 +48,10 @@ public class DatabaseManager implements IDatabaseManager {
 
     @JsonIgnore
     private transient final Map<String, ClassLoader> entityClassloaders = new HashMap<>(Map.of("app", Thread.currentThread().getContextClassLoader()));
+    @JsonIgnore
+    private transient final Map<String, Driver> drivers = new ConcurrentHashMap<>();
+    @JsonIgnore
+    private transient final Set<String> manualClassLoaders = new HashSet<>();
     @JsonIgnore
     private transient final Set<IDatabaseService> storedDataSources = new HashSet<>();
     @JsonIgnore
@@ -95,15 +95,21 @@ public class DatabaseManager implements IDatabaseManager {
             TableNames.clear();
             CachedFields.clear();
             LazyFields.clear();
+            ToOneFields.clear(); // keyed by class name like the two above: after an in-process restart the name is the same but the Field belongs to a class that is gone
+            OneToManyFields.clear();
             DatabaseService.clearLazySelects();
             serviceCache.clear();
+            entityServiceCache.clear();
             AffectedBy.clear(); // derived from what is registered, which is exactly what this method changes
             resetAllCaches();
 
             if (IsSingleSource()) {
                 if (entityClassloaders.isEmpty()) entityClassloaders.put("app", Thread.currentThread().getContextClassLoader());
                 DatabaseUtils.scanEntitiesOfLoaders(new HashSet<>(entityClassloaders.values()), classes -> {
-                    getDefaultService().setEntities(classes.stream().map((c) -> new EntityInfo(c, getEntityClassloaderKey(c.getClassLoader()))).collect(Collectors.toSet()));
+                    // one source means everything found belongs to it, bar what is placed by hand - which keeps the placement it already has
+                    Set<IEntityInfo> found = getDefaultService().getEntities().stream().filter(IEntityInfo::isPlacedByHand).collect(Collectors.toSet());
+                    classes.stream().map((c) -> new EntityInfo(c, getEntityClassloaderKey(c.getClassLoader()))).filter(e -> !e.isPlacedByHand()).forEach(found::add);
+                    getDefaultService().setEntities(found);
                 });
             } else {
                 for (IDatabaseService ds : getSources()) {
@@ -132,8 +138,9 @@ public class DatabaseManager implements IDatabaseManager {
             if (ds.getMissingEntitiesClasses().contains(C)) {
                 log.error("Entity [{}] is registered for [{}] but is missing from the database.", C.getName(), ds.getName());
             } else if (constructor.newInstance() instanceof DatabaseObject<?>) {
-                if (ds.getUpdatableEntitiesClasses().contains(C)) {
-                    log.warn("Entity [{}] is registered for [{}] but needs to be updated.", C.getName(), ds.getName());
+                IEntityInfo outOfDate = ds.getUpdatableEntities().stream().filter(e -> e.getEntityClass() == C).findFirst().orElse(null);
+                if (outOfDate != null) {
+                    log.warn("Entity [{}] is registered for [{}] but needs to be updated: {}.", C.getName(), ds.getName(), outOfDate.getSchemaMismatch());
                 } else {
                     log.info("Entity [{}] is registered for [{}].", C.getName(), ds.getName());
                     RegisterBundleObjects(C);
@@ -190,8 +197,9 @@ public class DatabaseManager implements IDatabaseManager {
         }
     }
 
+    /** A source built by hand rather than by Spring arrives with null credentials, which used to throw here rather than being refused like any other incomplete source. */
     public boolean addSource(IDatabaseService ds) {
-        if (ds.getConnectionString().isEmpty() || ds.getName().isEmpty() || ds.getPassword().isEmpty() || ds.getUsername().isEmpty() || getSources().stream().anyMatch(d -> d.getConnectionString().equalsIgnoreCase(ds.getConnectionString()) || d.getName().equals(ds.getName()))) return false;
+        if (StringUtils.isBlank(ds.getConnectionString()) || StringUtils.isBlank(ds.getName()) || StringUtils.isBlank(ds.getPassword()) || StringUtils.isBlank(ds.getUsername()) || getSources().stream().anyMatch(d -> d.getConnectionString().equalsIgnoreCase(ds.getConnectionString()) || d.getName().equals(ds.getName()))) return false;
         if (getDefaultService() != null && ds.isDefault()) return false;
         storedDataSources.add(ds);
         // No JPA registration here on purpose - DatabaseService#getJpaBeans builds it lazily on first real
@@ -207,6 +215,14 @@ public class DatabaseManager implements IDatabaseManager {
             }
             return !ds.isDefault();
         });
+    }
+    /** Spring's inferred destroy method for the bean. The JPA beans go first: unregister reads them off the source, and close() below is what nulls them. */
+    public void close() {
+        log.info("Closing database manager with {} data source(s)", getSources().size());
+        for (IDatabaseService ds : getSources()) if (ds instanceof DatabaseService concrete) {
+            JpaSourceRegistrar.unregister(concrete, context);
+            concrete.close();
+        }
     }
     public Set<IDatabaseService> getSources() {
         return storedDataSources;
@@ -416,6 +432,26 @@ public class DatabaseManager implements IDatabaseManager {
     public String getEntityClassloaderKey(ClassLoader key) {
         return entityClassloaders.entrySet().stream().filter(e -> Objects.equals(e.getValue(), key)).findFirst().map(Map.Entry::getKey).orElse(null);
     }
+    /** A plugin's classloader is a child of this one, so a driver shipped in a jar is unreachable by name here and is built through the loaders the plugins registered instead. */
+    public Driver findDriver(String driverClass) {
+        Driver known = drivers.get(driverClass);
+        if (known != null) return known;
+        for (ClassLoader loader : entityClassloaders.values()) {
+            try {
+                Driver built = (Driver) loader.loadClass(driverClass).getDeclaredConstructor().newInstance();
+                drivers.put(driverClass, built);
+                return built;
+            } catch (Exception ignored) { }
+        }
+        return null;
+    }
+    /** Marks a classloader whose entities are placed on a data source by hand only - nothing here is ever swept onto the default source, so a table designed after the platform was installed lands in the database its owner picks. */
+    public void requireManualAssignment(String classLoaderKey) {
+        manualClassLoaders.add(classLoaderKey);
+    }
+    public boolean needsManualAssignment(String classLoaderKey) {
+        return manualClassLoaders.contains(classLoaderKey);
+    }
 
     private void scanBundleContainers() {
         bundleObjects = new ArrayList<>();
@@ -435,14 +471,14 @@ public class DatabaseManager implements IDatabaseManager {
 
     public void LoadFromFile(String path) {
         log.info("Opening database source file: {}", path);
-        DataSourceFile db = DataSourceFile.ReadFrom(path);
+        DataSourceFile db = DataSourceFile.read(path);
         List<DatabaseService> readSources = db.getSources();
         if (readSources.isEmpty()) {
-            readSources = new DataSourceFile(this).WriteTo(path).getSources();
+            readSources = new DataSourceFile(this).Write(path).getSources();
             log.warn("No database sources found, re-creating source file using default sources.");
         }
         if (readSources.stream().filter(IDatabaseService::isDefault).count() != 1) {
-            readSources = new DataSourceFile(this).WriteTo(path).getSources();
+            readSources = new DataSourceFile(this).Write(path).getSources();
             log.warn("None or multiple default database sources found, re-creating source file using default sources.");
         }
 
@@ -467,39 +503,7 @@ public class DatabaseManager implements IDatabaseManager {
         } else if (getSources().stream().filter(IDatabaseService::isDefault).count() != 1) {
             log.warn("Failed to write data source file, none or multiple default database sources found.");
         } else {
-            new DataSourceFile(this).WriteTo(path);
-        }
-    }
-
-
-    protected static class DataSourceFile extends JSONItem<DataSourceFile> {
-        private final List<DatabaseService> sources = new ArrayList<>();
-        public DataSourceFile(IDatabaseManager manager) {
-            for (IDatabaseService ds : manager.getSources()) {
-                sources.add((DatabaseService) ds);
-            }
-        }
-
-        public List<DatabaseService> getSources() {
-            return sources;
-        }
-        public DataSourceFile WriteTo(String path) {
-            try {
-                return WriteJSON(path);
-            } catch (Exception _) {
-                return null;
-            }
-        }
-
-        public static DataSourceFile ReadFrom(String path) {
-            DataSourceFile db;
-            try {
-                db = ReadJSON(path, DataSourceFile.class);
-                if (db == null) throw new Exception();
-            } catch (Exception e) {
-                db = new DataSourceFile(SolarDBManager).WriteTo(path) instanceof DataSourceFile dbf ? dbf : new DataSourceFile(SolarDBManager);
-            }
-            return db;
+            new DataSourceFile(this).Write(path);
         }
     }
 
@@ -521,7 +525,7 @@ public class DatabaseManager implements IDatabaseManager {
         String table = stats.getTableName();
         try {
             List<String> cols = stats.getColumnNames();
-            List<String> pks = stats.getColumnDetails().stream().filter(TableStats.ColumnDetail::isPrimaryKey).map(TableStats.ColumnDetail::getName).toList();
+            List<String> pks = stats.getColumns().stream().filter(TableStats.Column::isPrimaryKey).map(TableStats.Column::getName).toList();
             String orderBy = String.join(", ", pks.isEmpty() ? cols : pks);
             String colList = String.join(", ", cols);
             String select = "SELECT " + colList + " FROM " + table + " ORDER BY " + orderBy + " LIMIT ? OFFSET ?";

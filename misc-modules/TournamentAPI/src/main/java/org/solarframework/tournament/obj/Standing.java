@@ -19,31 +19,31 @@ import org.solarframework.tournament.util.Ids;
  * phase's matches rather than stored, so it can never drift from the actual results.
  */
 @Entity
-@Table(name = "tournament_standing")
+@Table(name = "tournament_standing", comment = "Ranked results calculated for tournament participants.")
 public class Standing extends DatabaseObject.ID_RECORD_OBJ<Long, Standing> {
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(referencedColumnName = "ID", name = "PhaseID", nullable = false, insertable = false, updatable = false)
     private Phase phase;
 
-    @Column(name = "TournamentID", nullable = false)
+    @Column(name = "TournamentID", nullable = false, comment = "Tournament containing this record.")
     private Long tournamentID;
-    @Column(name = "PhaseID", nullable = false)
+    @Column(name = "PhaseID", nullable = false, comment = "Phase containing this record.")
     private Long phaseID;
-    @Column(name = "ParticipantID", nullable = false)
+    @Column(name = "ParticipantID", nullable = false, comment = "Participant represented by this record.")
     private Long participantID;
     /** 0 for a single-table phase, otherwise the group this entrant sits in. */
-    @Column(name = "GroupIndex", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    @Column(name = "GroupIndex", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0", comment = "Group containing this record; zero for an ungrouped phase.")
     private int groupIndex = 0;
     /** Seed within the phase (may differ from the tournament-wide seed). */
-    @Column(name = "Seed", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    @Column(name = "Seed", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0", comment = "Starting seed within this phase.")
     private int seed = 0;
     /** Set by the format's engine once the phase is ranked. */
-    @Column(name = "Rank", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    @Column(name = "Rank", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0", comment = "Placing assigned when the phase is ranked.")
     private int rank = 0;
-    @Column(name = "Qualified", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0")
+    @Column(name = "Qualified", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0", comment = "Whether the entrant qualified from this phase.")
     private boolean qualified = false;
-    @Column(name = "Eliminated", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0")
+    @Column(name = "Eliminated", nullable = false, columnDefinition = "TINYINT(1) NOT NULL DEFAULT 0", comment = "Whether the entrant was eliminated in this phase.")
     private boolean eliminated = false;
 
     public Standing() {}

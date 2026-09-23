@@ -2,6 +2,7 @@ package org.solarframework.certs;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.solarframework.core.util.SolarHome;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -47,13 +48,19 @@ public class MKCert {
         }
     }
 
+    /** The front door's certificates, kept with the rest of what the installation has decided rather than beside the program. */
+    public static final Path CERTS_FOLDER = SolarHome.pathTo("config/certs");
+    public static final String CERTIFICATE_FILE = CERTS_FOLDER.resolve("ssldomains.pem").toString();
+    public static final String PRIVATE_KEY_FILE = CERTS_FOLDER.resolve("ssldomains-key.pem").toString();
+    public static final String KEYSTORE_FILE = CERTS_FOLDER.resolve("ssldomains.p12").toString();
+
     public static void GenerateCertificateFor(List<String> domains) throws Exception {
-        Files.createDirectories(Path.of("./config/certs"));
+        Files.createDirectories(CERTS_FOLDER);
         List<String> cmd = new ArrayList<>();
         cmd.add(0, "-cert-file");
-        cmd.add(1, "./config/certs/ssldomains.pem");
+        cmd.add(1, CERTIFICATE_FILE);
         cmd.add(2, "-key-file");
-        cmd.add(3, "./config/certs/ssldomains-key.pem");
+        cmd.add(3, PRIVATE_KEY_FILE);
         cmd.addAll(domains);
         runCommandNoPrint(MKCERTPATH, cmd);
         OpenSSL.MakeCertsSSL();

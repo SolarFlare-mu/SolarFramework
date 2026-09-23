@@ -6,8 +6,6 @@ import io.github.classgraph.ScanResult;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import org.hibernate.annotations.View;
-import org.springframework.stereotype.Component;
-
 import org.solarframework.core.util.ClassUtils;
 
 import java.util.ArrayList;

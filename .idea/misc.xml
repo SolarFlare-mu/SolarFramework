@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="EntryPointsManager">
     <writeAnnotations>
@@ -15,6 +16,7 @@
     <option name="ignoredFiles">
       <set>
         <option value="$PROJECT_DIR$/DatabaseREST/pom.xml" />
+        <option value="$PROJECT_DIR$/TestApp/pom.xml" />
         <option value="$PROJECT_DIR$/modules/DatabaseCommon/pom.xml" />
         <option value="$PROJECT_DIR$/web-modules/AuthenticationAPI/pom.xml" />
         <option value="$PROJECT_DIR$/web-modules/AuthenticationImpl/pom.xml" />

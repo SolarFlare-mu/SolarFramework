@@ -7,9 +7,7 @@ import org.solarframework.ai.IAIManager;
 import org.solarframework.ai.IAIService;
 import org.solarframework.ai.dto.ChatbotDefinition;
 import org.solarframework.ai.dto.ServiceDefinition;
-import org.solarframework.json.JSONItem;
 import org.springframework.ai.model.tool.ToolCallingManager;
-import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -88,6 +86,16 @@ public class AIManager implements IAIManager {
         log.info("Removed AI service {}", name);
         return true;
     }
+    /** Releases registrations from a context that is stopping, so its static entry points cannot retain old services. */
+    public void close() {
+        log.info("Closing AI manager with {} service(s) and {} chatbot(s)", services.size(), chatbots.size());
+        IAIService registeredDefault = getDefaultService();
+        services.clear();
+        chatbots.clear();
+        defaultName = null;
+        if (SolarAIManager == this) SolarAIManager = null;
+        if (DefaultAIService == registeredDefault) DefaultAIService = null;
+    }
 
     @Override public boolean renameService(String oldName, String newName) {
         if (oldName.equals(newName)) return true;
@@ -154,7 +162,7 @@ public class AIManager implements IAIManager {
 
     @Override public void LoadFromFile(String path) {
         log.info("Opening AI config file: {}", path);
-        AIConfigFile file = AIConfigFile.ReadFrom(path, this);
+        AIConfigFile file = AIConfigFile.read(path, this);
 
         // The file is the whole truth now - nothing is seeded from anywhere else, so what it does not
         // name does not exist. Clearing first is what makes a removal on the managing screen stick.
@@ -175,42 +183,7 @@ public class AIManager implements IAIManager {
     }
 
     @Override public void SaveAsFile(String path) {
-        if (new AIConfigFile(this).WriteTo(path) == null) log.error("Failed to write AI config file: {}", path);
-    }
-
-    /** The file itself: the endpoints and the agents that run on them, as data, mirroring {@code DataSourceFile}. */
-    protected static class AIConfigFile extends JSONItem<AIConfigFile> {
-        private final List<ServiceDefinition> services = new ArrayList<>();
-        private final List<ChatbotDefinition> chatbots = new ArrayList<>();
-
-        public AIConfigFile(IAIManager manager) {
-            services.addAll(manager.getServiceDefinitions());
-            chatbots.addAll(manager.getChatbotDefinitions());
-        }
-
-        public List<ServiceDefinition> getServices() { return services; }
-        public List<ChatbotDefinition> getChatbots() { return chatbots; }
-
-        public AIConfigFile WriteTo(String path) {
-            try {
-                return WriteJSON(path);
-            } catch (Exception _) {
-                return null;
-            }
-        }
-
-        /** A missing or unreadable file is written from what the manager currently holds. */
-        public static AIConfigFile ReadFrom(String path, IAIManager manager) {
-            try {
-                AIConfigFile file = ReadJSON(path, AIConfigFile.class);
-                if (file == null) throw new IllegalStateException("empty file");
-                return file;
-            } catch (Exception _) {
-                log.warn("No readable AI config file at {}, creating one from the current setup", path);
-                AIConfigFile written = new AIConfigFile(manager);
-                return written.WriteTo(path) instanceof AIConfigFile f ? f : written;
-            }
-        }
+        if (new AIConfigFile(this).Write(path) == null) log.error("Failed to write AI config file: {}", path);
     }
 
     @Override public String toString() { return "AIManager[" + services.keySet() + ", " + chatbots.size() + " chatbot(s)]"; }

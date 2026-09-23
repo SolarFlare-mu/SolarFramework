@@ -1,14 +1,10 @@
 package org.solarframework.db.test;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.solarframework.db.Database_Main;
-import org.solarframework.db.test.obj.User;
 import org.solarframework.db.spring.SolarRegistryListener;
+import org.solarframework.db.test.obj.User;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestExecutionListeners;
 

@@ -16,7 +16,7 @@ import static org.solarframework.db.spring.DatabaseRegistry.SolarDBManager;
 import static org.solarframework.discord.core.BotBuilder.DiscordAccount;
 
 @Entity
-@Table(name = "discord_channelinfo")
+@Table(name = "discord_channelinfo", comment = "Discord channels discovered for a registered server.")
 @IdClass(ActionServerID.class)
 public class Discord_ChannelInfo extends DatabaseObject<Discord_ChannelInfo> {
     @ManyToOne
@@ -30,13 +30,13 @@ public class Discord_ChannelInfo extends DatabaseObject<Discord_ChannelInfo> {
     private transient GuildChannel C;
 
     @Id
-    @Column(name = "Action", length = 64, nullable = false)
+    @Column(name = "Action", length = 64, nullable = false, comment = "Action name used to look up this Discord mapping.")
     private String Action;
     @Id
-    @Column(name = "ServerID", nullable = false)
+    @Column(name = "ServerID", nullable = false, comment = "Discord server that owns this record.")
     private Long ServerID;
 
-    @Column(name = "ChannelID", nullable = false)
+    @Column(name = "ChannelID", nullable = false, comment = "Discord channel associated with this record.")
     private Long ChannelID;
 
     public Discord_ChannelInfo() {}

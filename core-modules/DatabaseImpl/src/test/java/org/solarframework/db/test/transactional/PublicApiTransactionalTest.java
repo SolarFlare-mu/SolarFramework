@@ -13,7 +13,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Instant;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.solarframework.db.spring.DatabaseRegistry.SolarDBManager;
 
 @SolarH2Test

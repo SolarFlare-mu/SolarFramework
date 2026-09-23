@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.solarframework.mu</groupId>
+        <artifactId>SolarFramework</artifactId>
+        <version>1.0</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>MailerImpl</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.solarframework.mu</groupId>
+            <artifactId>MailerAPI</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.solarframework.mu</groupId>
+            <artifactId>JSON</artifactId>
+        </dependency>
+
+        <!-- The sender and the mail implementation, not spring-boot-starter-mail. The stack has to run with no
+             application context at all - inside a plugin - so the starter's autoconfiguration cannot be relied on,
+             and every jar it drags in would have to be shaded into whichever plugin carries this module. A Spring
+             host gets its beans from MailConfig instead. -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>jakarta.mail</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

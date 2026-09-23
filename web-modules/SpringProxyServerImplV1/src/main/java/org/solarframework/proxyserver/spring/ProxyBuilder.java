@@ -1,11 +1,11 @@
 package org.solarframework.proxyserver.spring;
 
-import org.solarframework.proxyserver.obj.Domain;
+import org.solarframework.proxyserver.obj.domains.Domain;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.solarframework.proxyserver.spring.ProxyService.WAMPSERVER;
+import static org.solarframework.proxyserver.spring.ProxyService.PROXYSERVER;
 public class ProxyBuilder {
 
     public static final String LOCALHOST = "127.0.0.1";
@@ -30,6 +30,6 @@ public class ProxyBuilder {
     }
 
     public ProxyService build() throws Exception {
-        return WAMPSERVER = new ProxyService(domains, regenCerts);
+        return PROXYSERVER = new ProxyService(domains, regenCerts);
     }
 }
