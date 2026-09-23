@@ -5,21 +5,21 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.solarframework.mu</groupId>
-        <artifactId>SolarFramework</artifactId>
+        <artifactId>solar-framework</artifactId>
         <version>1.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>BackupImpl</artifactId>
+    <artifactId>backup-impl</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>org.solarframework.mu</groupId>
-            <artifactId>BackupAPI</artifactId>
+            <artifactId>backup-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.solarframework.mu</groupId>
-            <artifactId>DatabaseAPI</artifactId>
+            <artifactId>database-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.solarframework.mu</groupId>
@@ -27,7 +27,7 @@
         </dependency>
         <dependency>
             <groupId>org.solarframework.mu</groupId>
-            <artifactId>JSON</artifactId>
+            <artifactId>json</artifactId>
         </dependency>
 
         <!-- BackupConfig's own: optional, so a plugin carrying this module does not have to bring Spring along for a
@@ -50,7 +50,7 @@
         </dependency>
         <dependency>
             <groupId>org.solarframework.mu</groupId>
-            <artifactId>DatabaseImpl</artifactId>
+            <artifactId>database-impl</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- SQLite's Hibernate dialect lives outside the core dialects, and the session factory the manager builds resolves it by name. -->

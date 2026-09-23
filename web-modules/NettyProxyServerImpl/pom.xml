@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.solarframework.mu</groupId>
-        <artifactId>SolarFramework</artifactId>
+        <artifactId>solar-framework</artifactId>
         <version>1.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>NettyProxyServerImpl</artifactId>
+    <artifactId>netty-proxy-server-impl</artifactId>
 
     <properties>
         <maven.compiler.source>25</maven.compiler.source>
@@ -31,15 +31,15 @@
         </dependency>
         <dependency>
             <groupId>org.solarframework.mu</groupId>
-            <artifactId>ProxyServerAPI</artifactId>
+            <artifactId>proxy-server-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.solarframework.mu</groupId>
-            <artifactId>CertificateGenerator</artifactId>
+            <artifactId>certificate-generator</artifactId>
         </dependency>
         <dependency>
             <groupId>org.solarframework.mu</groupId>
-            <artifactId>DatabaseAPI</artifactId>
+            <artifactId>database-api</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>

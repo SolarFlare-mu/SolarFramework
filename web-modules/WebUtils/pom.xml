@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.solarframework.mu</groupId>
-        <artifactId>SolarFramework</artifactId>
+        <artifactId>solar-framework</artifactId>
         <version>1.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>WebUtils</artifactId>
+    <artifactId>web-utils</artifactId>
 
     <properties>
         <maven.compiler.source>25</maven.compiler.source>

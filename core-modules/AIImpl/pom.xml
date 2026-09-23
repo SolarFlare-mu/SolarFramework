@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.solarframework.mu</groupId>
-        <artifactId>SolarFramework</artifactId>
+        <artifactId>solar-framework</artifactId>
         <version>1.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>AIImpl</artifactId>
+    <artifactId>ai-impl</artifactId>
 
     <properties>
         <spring-ai.version>2.0.0-M2</spring-ai.version>
@@ -30,7 +30,7 @@
     <dependencies>
         <dependency>
             <groupId>org.solarframework.mu</groupId>
-            <artifactId>AIAPI</artifactId>
+            <artifactId>ai-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.solarframework.mu</groupId>
@@ -38,13 +38,13 @@
         </dependency>
         <dependency>
             <groupId>org.solarframework.mu</groupId>
-            <artifactId>JSON</artifactId>
+            <artifactId>json</artifactId>
         </dependency>
 
         <!-- Persistence is a wiring choice: a host that never sets a store pulls in no database code. -->
         <dependency>
             <groupId>org.solarframework.mu</groupId>
-            <artifactId>DatabaseAPI</artifactId>
+            <artifactId>database-api</artifactId>
             <optional>true</optional>
         </dependency>
 

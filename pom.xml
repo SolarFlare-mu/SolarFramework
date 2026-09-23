@@ -10,7 +10,7 @@
     </parent>
 
     <groupId>org.solarframework.mu</groupId>
-    <artifactId>SolarFramework</artifactId>
+    <artifactId>solar-framework</artifactId>
     <version>1.0</version>
     <packaging>pom</packaging>
     <inceptionYear>2026</inceptionYear>
@@ -97,12 +97,12 @@
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>DatabaseImpl</artifactId>
+                <artifactId>database-impl</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>DatabaseAPI</artifactId>
+                <artifactId>database-api</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
@@ -112,92 +112,92 @@
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>AIAPI</artifactId>
+                <artifactId>ai-api</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>AIImpl</artifactId>
+                <artifactId>ai-impl</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>Excel</artifactId>
+                <artifactId>excel</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>JSON</artifactId>
+                <artifactId>json</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>SearchAPI</artifactId>
+                <artifactId>search-api</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>SearchImpl</artifactId>
+                <artifactId>search-impl</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>BackupAPI</artifactId>
+                <artifactId>backup-api</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>BackupImpl</artifactId>
+                <artifactId>backup-impl</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>MailerAPI</artifactId>
+                <artifactId>mailer-api</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>MailerImpl</artifactId>
+                <artifactId>mailer-impl</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>Language</artifactId>
+                <artifactId>language</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>Plugin</artifactId>
+                <artifactId>plugin</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>TournamentAPI</artifactId>
+                <artifactId>tournament-api</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>TournamentImpl</artifactId>
+                <artifactId>tournament-impl</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>RunnerAPI</artifactId>
+                <artifactId>runner-api</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>JavaRunner</artifactId>
+                <artifactId>java-runner</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>PythonRunner</artifactId>
+                <artifactId>python-runner</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>CSharpRunner</artifactId>
+                <artifactId>csharp-runner</artifactId>
                 <version>1.0</version>
             </dependency>
 
@@ -224,43 +224,43 @@
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>DatabaseEditor</artifactId>
+                <artifactId>database-editor</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>WebUtils</artifactId>
+                <artifactId>web-utils</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>ProxyServerAPI</artifactId>
+                <artifactId>proxy-server-api</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>NettyProxyServerImpl</artifactId>
+                <artifactId>netty-proxy-server-impl</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>SpringProxyServerImplV1</artifactId>
+                <artifactId>spring-proxy-server-impl-v1</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>SpringProxyServerImplV2</artifactId>
+                <artifactId>spring-proxy-server-impl-v2</artifactId>
                 <version>1.0</version>
             </dependency>
 
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>Discord</artifactId>
+                <artifactId>discord</artifactId>
                 <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.solarframework.mu</groupId>
-                <artifactId>CertificateGenerator</artifactId>
+                <artifactId>certificate-generator</artifactId>
                 <version>1.0</version>
             </dependency>
 

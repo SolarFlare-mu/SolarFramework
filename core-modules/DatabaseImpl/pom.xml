@@ -5,17 +5,17 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.solarframework.mu</groupId>
-        <artifactId>SolarFramework</artifactId>
+        <artifactId>solar-framework</artifactId>
         <version>1.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>DatabaseImpl</artifactId>
+    <artifactId>database-impl</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>org.solarframework.mu</groupId>
-            <artifactId>DatabaseAPI</artifactId>
+            <artifactId>database-api</artifactId>
         </dependency>
 
         <dependency>
@@ -24,7 +24,7 @@
         </dependency>
         <dependency>
             <groupId>org.solarframework.mu</groupId>
-            <artifactId>JSON</artifactId>
+            <artifactId>json</artifactId>
         </dependency>
 
         <dependency>
