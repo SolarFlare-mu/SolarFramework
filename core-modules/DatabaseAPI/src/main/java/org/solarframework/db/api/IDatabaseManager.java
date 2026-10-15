@@ -101,9 +101,8 @@ public interface IDatabaseManager {
     void requireManualAssignment(String classLoaderKey);
     boolean needsManualAssignment(String classLoaderKey);
 
-    void LoadFromFile(String path);
-
-    void SaveAsFile(String path);
+    void LoadFromFile();
+    void SaveAsFile();
 
 
     long migrate(IDatabaseService oldSource, IDatabaseService newSource, IEntityInfo entity) throws DataMigrationException;

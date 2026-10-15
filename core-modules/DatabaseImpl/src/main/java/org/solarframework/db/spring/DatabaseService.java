@@ -867,6 +867,15 @@ public class DatabaseService implements IDatabaseService {
         }
         if (targetType == String.class) return (T) value.toString();
         if (targetType == Boolean.class && value instanceof String s) return (T) Boolean.valueOf(s);
+        java.time.Instant moment = switch (value) { // a date column read outside the entity mapping; without this an Instant field (CreatedAt) silently stayed null
+            case Timestamp t -> t.toInstant();
+            case java.time.OffsetDateTime o -> o.toInstant();
+            case java.time.ZonedDateTime z -> z.toInstant();
+            case java.time.LocalDateTime l -> l.atZone(java.time.ZoneId.systemDefault()).toInstant();
+            default -> null;
+        };
+        if (moment != null && targetType == java.time.Instant.class) return (T) moment;
+        if (moment != null && targetType == java.time.LocalDateTime.class) return (T) java.time.LocalDateTime.ofInstant(moment, java.time.ZoneId.systemDefault());
         try {
             return (T) targetType.cast(value);
         } catch (ClassCastException e) {

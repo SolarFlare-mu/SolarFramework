@@ -15,6 +15,7 @@
         <module name="JSON" />
         <module name="TournamentAPI" />
         <module name="CSharpRunner" />
+        <module name="node-runner" />
         <module name="RunnerAPI" />
         <module name="Excel" />
         <module name="MailerAPI" />
@@ -102,6 +103,7 @@
       <module name="WebUtils" options="-parameters" />
       <module name="ZIP" options="-parameters" />
       <module name="core" options="-parameters" />
+      <module name="node-runner" options="-parameters" />
       <module name="web-modules" options="-parameters" />
     </option>
   </component>

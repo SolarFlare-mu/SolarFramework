@@ -73,9 +73,8 @@ public interface IAIManager {
      * <p>A restored agent has its persona, model and bounds but no tools — hand those to
      * {@code getChatbot(name)} rebuilt with its tools afterwards.
      */
-    void LoadFromFile(String path);
-
-    void SaveAsFile(String path);
+    void LoadFromFile();
+    void SaveAsFile();
 
     List<ServiceDefinition> getServiceDefinitions();
 

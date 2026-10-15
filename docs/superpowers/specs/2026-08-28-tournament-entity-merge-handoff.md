@@ -77,5 +77,5 @@ ServiceLoader cannot do, so **`RoundRobinEngine extends GroupEngine`** was added
 ## Related, same session
 
 The AI module was restructured far more heavily (interfaces 8 → 2, `Conversation`/`ChatMessage` are
-now `@Entity` in **AIAPI**, structured output moved to native `response_format`). `CLAUDE.md` is
+now `@Entity` in **AIAPI**, structured output moved to native `response_format`). `../../../.claude/CLAUDE.md` is
 current for that; the spec at `2026-08-28-ai-chatbot-agent-design.md` **predates it and is stale**.

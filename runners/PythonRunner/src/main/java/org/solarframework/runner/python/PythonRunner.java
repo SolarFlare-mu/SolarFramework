@@ -37,6 +37,9 @@ public class PythonRunner extends AppRunner {
         return Stream.of(".venv", "venv").map(dir::resolve).map(v -> v.resolve(WINDOWS ? "Scripts/python.exe" : "bin/python")).filter(Files::isRegularFile).findFirst();
     }
 
+    /** The module or script it runs, such as app.main. */
+    @Override public String name() { return target.getFirst().equals("-m") ? target.get(1) : Path.of(target.getFirst()).getFileName().toString(); }
+
     @Override protected List<String> command() { return join(List.of(getInterpreter()), target.toArray(String[]::new)); }
 
     private static List<String> join(List<String> head, String... tail) {

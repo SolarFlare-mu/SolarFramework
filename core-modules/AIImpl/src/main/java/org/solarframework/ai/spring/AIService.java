@@ -12,6 +12,7 @@ import org.solarframework.ai.exception.AIException;
 import org.solarframework.ai.lmstudio.LMStudioModelManager;
 import org.solarframework.ai.obj.ChatMessage;
 import org.solarframework.ai.obj.Conversation;
+import org.solarframework.core.util.EnvValue;
 import org.solarframework.core.util.RateLimiter;
 import org.solarframework.core.util.StringUtils;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -51,6 +52,9 @@ import java.util.stream.Collectors;
  * builds its own model lazily — the same shape as {@code DatabaseService} owning its pool. That is
  * what lets the whole AI stack live inside a plugin, where there is no application context to read
  * properties from and no component scan to find a bean.
+ * <p>The key may be written as {@code "${NAME}"} (see {@link EnvValue}), so a config file that is committed or shared
+ * names the variable rather than holding the secret. {@link #getApiKey()} keeps the reference, which is what gets
+ * saved back; it is resolved only for the request itself.
  */
 public class AIService implements IAIService {
 
@@ -93,9 +97,15 @@ public class AIService implements IAIService {
     /** Drops what was built from the old settings so the next call rebuilds against the new ones. */
     private void reset() { models = null; chatModel = null; }
 
+    /** The key to send: the variable a {@code "${NAME}"} key names, or the key itself; "N/A" when there is none, as a server needing no key expects. */
+    private String key() {
+        String k = EnvValue.resolve(apiKey);
+        return k == null || k.isBlank() ? "N/A" : k;
+    }
+
     @Override public boolean isAvailable() { return models().isAvailable(); }
 
-    private LMStudioModelManager models() { return models == null ? models = new LMStudioModelManager(baseUrl) : models; }
+    private LMStudioModelManager models() { return models == null ? models = new LMStudioModelManager(baseUrl, key()) : models; }
 
     /** The configured model's own details, cached briefly — they only change when it is loaded or unloaded. */
     private LMStudioModelManager.Model info() {
@@ -187,8 +197,9 @@ public class AIService implements IAIService {
     OpenAiChatOptions toSpring(AIOptions o, List<ToolCallback> tools, boolean internalToolExecution, String jsonSchema, String schemaName) {
         OpenAiChatOptions.Builder b = OpenAiChatOptions.builder()
                 .model(o.model() != null ? o.model() : model)
-                .maxTokens(o.maxOutputTokens()).temperature(o.temperature()).topP(o.topP())
-                .frequencyPenalty(o.frequencyPenalty()).presencePenalty(o.presencePenalty());
+                .maxTokens(o.maxOutputTokens()).temperature(o.temperature()).topP(o.topP());
+        if (o.frequencyPenalty() != null && o.frequencyPenalty() != 0) b.frequencyPenalty(o.frequencyPenalty()); // a zero is left out: some cloud models refuse the parameter even then
+        if (o.presencePenalty() != null && o.presencePenalty() != 0) b.presencePenalty(o.presencePenalty());
         if (!o.stop().isEmpty()) b.stop(o.stop());
         if (o.allowTools() && tools != null && !tools.isEmpty()) b.toolCallbacks(tools).internalToolExecutionEnabled(internalToolExecution);
         if (jsonSchema != null) b.responseFormat(ResponseFormat.builder().type(ResponseFormat.Type.JSON_SCHEMA)
@@ -314,9 +325,11 @@ public class AIService implements IAIService {
         if (chatModel != null) return chatModel;
         JdkClientHttpRequestFactory requests = new JdkClientHttpRequestFactory();
         requests.setReadTimeout(Duration.ofSeconds(timeoutSeconds));
-        OpenAiApi api = OpenAiApi.builder().baseUrl(baseUrl)
-                .apiKey(apiKey == null || apiKey.isBlank() ? "N/A" : apiKey)
-                .restClientBuilder(RestClient.builder().requestFactory(requests))
+        RestClient.Builder rest = RestClient.builder().requestFactory(requests);
+        if (models().baseUrl().contains("googleapis.com")) rest.requestInterceptor(new GeminiRequests()); // Gemini refuses penalties and wants a thought signature on every tool call
+        OpenAiApi api = OpenAiApi.builder().baseUrl(models().baseUrl()).completionsPath(models().apiPath("/chat/completions"))
+                .apiKey(key())
+                .restClientBuilder(rest)
                 .build();
         // No retries: Spring AI's default template tries 10 times with back-off, so one timeout from a slow local
         // model became many minutes of waiting and a model kept busy. A failed call now fails once, and the caller decides.

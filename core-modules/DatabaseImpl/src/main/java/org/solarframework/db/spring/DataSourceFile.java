@@ -7,7 +7,6 @@ import org.solarframework.json.JSONItem;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.solarframework.db.spring.DatabaseRegistry.SolarDBManager;
 
 /** Database sources as stored in `config/data/database.json`. */
 class DataSourceFile extends JSONItem<DataSourceFile> {
@@ -20,5 +19,4 @@ class DataSourceFile extends JSONItem<DataSourceFile> {
     @Override public String file() { return DatabaseConfig.FILE; }
     public List<DatabaseService> getSources() { return sources; }
 
-    public static DataSourceFile read(String path) { return ReadOrCreate(path, DataSourceFile.class, new DataSourceFile(SolarDBManager)); }
 }

@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * Talks to a local LM Studio server about the models it holds. Internal to AIImpl: what a caller
@@ -26,11 +27,16 @@ import java.util.concurrent.TimeUnit;
  * never trusted here. And it exposes <strong>no REST load/unload</strong>, so those go through the
  * {@code lms} CLI; without it they report false and the model still loads just-in-time on first use.
  * <p>Never downloads and never deletes a model.
+ * <p>An endpoint that is not LM Studio - a cloud provider, or any other OpenAI-compatible server - answers only the
+ * standard {@code /v1/models}, and only with its key. It is sent with every request, and the model list falls back to
+ * the standard one, which names the models but says nothing of their state, context or capabilities. The CLI is used
+ * only for a server on this machine, since it can only ever load models here.
  */
 public class LMStudioModelManager {
 
     private static final Logger log = LoggerFactory.getLogger(LMStudioModelManager.class);
     private static final long PROBE_CACHE_MS = 5000;
+    private static final Pattern VERSIONED = Pattern.compile("/v\\d+\\w*(/|$)");
 
     /** What LM Studio reports about one model. */
     public record Model(String id, String type, String publisher, String arch, String quantization, String state, int maxContextLength, int loadedContextLength, List<String> capabilities) {
@@ -40,25 +46,35 @@ public class LMStudioModelManager {
         public int usableContext() { return loadedContextLength > 0 ? loadedContextLength : maxContextLength; }
     }
 
-    private final String baseUrl;
+    private final String baseUrl, apiKey;
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
     private final String cli = findCli();
     private boolean reachable;
     private long probedAt;
     private boolean warnedAboutCli;
 
-    public LMStudioModelManager(String baseUrl) {
+    public LMStudioModelManager(String baseUrl) { this(baseUrl, null); }
+
+    /** @param apiKey sent as a bearer token; null, blank or "N/A" sends none, which is what LM Studio expects */
+    public LMStudioModelManager(String baseUrl, String apiKey) {
+        this.apiKey = apiKey == null || apiKey.isBlank() || apiKey.equals("N/A") ? null : apiKey;
         this.baseUrl = baseUrl == null ? "http://localhost:1234" : baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
     }
 
     public boolean isAvailable() {
         if (probedAt != 0 && System.currentTimeMillis() - probedAt < PROBE_CACHE_MS) return reachable;
         probedAt = System.currentTimeMillis();
-        return reachable = bodyOf("/v1/models") != null;
+        return reachable = bodyOf(apiPath("/models")) != null;
     }
 
+    /** A standard endpoint of this server: a base URL that already names its version (`.../v1`, `.../v1beta/openai`) is followed directly, any other gets `/v1` first. */
+    public String apiPath(String endpoint) { return (isVersioned() ? "" : "/v1") + endpoint; }
+
+    private boolean isVersioned() { return VERSIONED.matcher(URI.create(baseUrl).getPath()).find(); }
+
     public List<Model> list() {
-        JsonObject body = bodyOf("/api/v0/models");
+        JsonObject body = isVersioned() ? null : bodyOf("/api/v0/models"); // /api/v0 is LM Studio's own, never behind a versioned base
+        if (body == null) body = bodyOf(apiPath("/models"));
         List<Model> models = new ArrayList<>();
         if (body == null || !body.has("data")) return models;
         JsonArray data = body.getAsJsonArray("data");
@@ -98,8 +114,9 @@ public class LMStudioModelManager {
     /** Null when the server is unreachable, returns a non-object, or reports an error in the body. */
     private JsonObject bodyOf(String path) {
         try {
-            HttpResponse<String> r = http.send(HttpRequest.newBuilder(URI.create(baseUrl + path)).timeout(Duration.ofSeconds(5)).GET().build(),
-                    HttpResponse.BodyHandlers.ofString());
+            HttpRequest.Builder request = HttpRequest.newBuilder(URI.create(baseUrl + path)).timeout(Duration.ofSeconds(5)).GET();
+            if (apiKey != null) request.header("Authorization", "Bearer " + apiKey);
+            HttpResponse<String> r = http.send(request.build(), HttpResponse.BodyHandlers.ofString());
             JsonElement parsed = JsonParser.parseString(r.body());
             if (!parsed.isJsonObject()) return null;
             JsonObject o = parsed.getAsJsonObject();
@@ -112,6 +129,7 @@ public class LMStudioModelManager {
     }
 
     private boolean run(List<String> args) {
+        if (!isLocal()) return false;
         if (cli == null) {
             if (!warnedAboutCli) { warnedAboutCli = true; log.info("lms CLI not found; LM Studio has no REST load/unload, so models will only load just-in-time"); }
             return false;
@@ -145,5 +163,10 @@ public class LMStudioModelManager {
     }
 
     public String baseUrl() { return baseUrl; }
+    /** Whether the server is on this machine, the only place the lms CLI can load a model. */
+    public boolean isLocal() {
+        String host = URI.create(baseUrl).getHost();
+        return host != null && (host.equals("localhost") || host.equals("127.0.0.1") || host.equals("::1") || host.equals("[::1]"));
+    }
     public boolean hasCli() { return cli != null; }
 }

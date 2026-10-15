@@ -15,13 +15,13 @@ public class BackupConfig {
     public static final String FILE = "config/backup/settings.json";
 
     @Bean
-    public IBackupService solarBackup(@Value("${solar.backup.directory:backups}") String directory, @Value("${solar.backup.keep:10}") int keep, @Value("${solar.backup.keep-days:7}") int keepDays, @Value("${solar.backup.include:config}") List<String> include, @Value("${solar.backup.config-file:" + FILE + "}") String configFile) {
+    public IBackupService solarBackup(@Value("${solar.backup.directory:backups}") String directory, @Value("${solar.backup.keep:10}") int keep, @Value("${solar.backup.keep-days:7}") int keepDays, @Value("${solar.backup.include:config}") List<String> include) {
         BackupService service = new BackupService();
         service.setDirectory(directory);
         service.setKeep(keep);
         service.setKeepDays(keepDays);
         service.setIncludedPaths(include);
-        service.LoadFromFile(configFile);
+        service.LoadFromFile();
         return service;
     }
 }

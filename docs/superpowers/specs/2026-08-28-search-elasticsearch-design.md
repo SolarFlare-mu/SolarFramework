@@ -16,7 +16,7 @@ the whole table crosses the HTTP boundary on each keystroke.
 ## Scope
 
 In scope: two new Maven modules inside SolarFramework, their unit tests, root `pom.xml` wiring, and
-the module list in `CLAUDE.md`.
+the module list in `../../../.claude/CLAUDE.md`.
 
 Out of scope, deliberately: any change to SolarERP or MauCareers. No consumer calls the new service
 yet. `SearchRegistry.SolarSearch` therefore stays on its no-op default in every running application
@@ -144,8 +144,8 @@ the generated JSON, and it is verified as data rather than over a socket.
 
 ## Documentation
 
-- SolarFramework `CLAUDE.md`: add both modules to the module layout list.
-- SolarERP `CLAUDE.md` names the framework layout as "complete as of 28 Aug 2026" — that list needs
+- SolarFramework `../../../.claude/CLAUDE.md`: add both modules to the module layout list.
+- SolarERP `../../../.claude/CLAUDE.md` names the framework layout as "complete as of 28 Aug 2026" — that list needs
   the two modules too, or it becomes wrong the moment this lands.
 
 ## Noted for another time

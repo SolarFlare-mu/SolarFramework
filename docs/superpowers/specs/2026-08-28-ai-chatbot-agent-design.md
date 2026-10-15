@@ -7,7 +7,7 @@ Status: **superseded — historical record of the design, not of the code.**
 > count fell from 8 to 2 (`IAIService`, `IAIManager`), `IConversation` was folded into `Conversation`
 > as ordinary methods, `Conversation` and `ChatMessage` became `@Entity` classes in **AIAPI**, and
 > structured output moved to the backend's native `response_format` rather than being asked for in
-> the prompt. **`CLAUDE.md` is the source of truth for the AI module.** Read this only for the
+> the prompt. **`../../../.claude/CLAUDE.md` is the source of truth for the AI module.** Read this only for the
 > reasoning behind the original split.
 
 ## Purpose
@@ -32,7 +32,7 @@ An agent is not a separate hierarchy. It is a chatbot you call `run()` on.
 ## Scope
 
 In scope: two new Maven modules, removal of `core-modules/AI`, root `pom.xml` wiring, the module
-list in `CLAUDE.md`, unit tests, and live tests against a local LM Studio.
+list in `../../../.claude/CLAUDE.md`, unit tests, and live tests against a local LM Studio.
 
 Out of scope, deliberately:
 
@@ -326,7 +326,7 @@ reaches into it. `msg.isSystem()`, `msg.estimateTokens()`, `options.withModel(id
 `isSystem(msg)` or `supports(model, cap)`. The `IModelManager.supports(id, cap)` convenience is a
 lookup that then delegates to `ModelInfo.supports`, which is where the logic actually lives.
 
-Beyond that, the rules in `CLAUDE.md` hold: single-line code stays on one line, no comments
+Beyond that, the rules in `../../../.claude/CLAUDE.md` hold: single-line code stays on one line, no comments
 restating the obvious, short names in short scopes, no field that can be derived.
 
 ## Error handling

@@ -7,10 +7,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.solarframework.core.Constants.ProgramZoneId;
 
 class TimeUtilsTest {
 
@@ -45,43 +45,43 @@ class TimeUtilsTest {
 
     @Test
     void getTimeFormatsInstantInProgramZone() {
-        Instant instant = LocalDate.of(2024, 1, 15).atStartOfDay(ProgramZoneId).toInstant();
+        Instant instant = LocalDate.of(2024, 1, 15).atStartOfDay(ZoneId.systemDefault()).toInstant();
         assertEquals("15/01/2024", TimeUtils.getTime("dd/MM/yyyy", instant));
     }
 
     @Test
     void getNowMatchesTodayInProgramZone() {
-        String expected = LocalDate.now(ProgramZoneId).toString();
+        String expected = LocalDate.now().toString();
         assertEquals(expected, TimeUtils.getNow("yyyy-MM-dd"));
     }
     @Test
     void getYesterdayIsOneDayBeforeToday() {
-        String expected = LocalDate.now(ProgramZoneId).minusDays(1).toString();
+        String expected = LocalDate.now().minusDays(1).toString();
         assertEquals(expected, TimeUtils.getYesterday("yyyy-MM-dd"));
     }
     @Test
     void getTomorrowIsOneDayAfterToday() {
-        String expected = LocalDate.now(ProgramZoneId).plusDays(1).toString();
+        String expected = LocalDate.now().plusDays(1).toString();
         assertEquals(expected, TimeUtils.getTomorrow("yyyy-MM-dd"));
     }
 
     @Test
     void getTomorrowMidnightIsStartOfNextDay() {
-        Instant expected = LocalDate.now(ProgramZoneId).plusDays(1).atStartOfDay(ProgramZoneId).toInstant();
+        Instant expected = LocalDate.now().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
         assertEquals(expected, TimeUtils.getTomorrowMidnight());
     }
 
     @Test
     void getNextMondayMidnightIsAlwaysAMonday() {
         Instant next = TimeUtils.getNextMondayMidnight();
-        assertEquals(DayOfWeek.MONDAY, next.atZone(ProgramZoneId).getDayOfWeek());
+        assertEquals(DayOfWeek.MONDAY, next.atZone(ZoneId.systemDefault()).getDayOfWeek());
         assertTrue(next.isAfter(Instant.now()));
     }
 
     @Test
     void getNextMonthStartMidnightIsFirstOfNextMonth() {
         Instant next = TimeUtils.getNextMonthStartMidnight();
-        assertEquals(1, next.atZone(ProgramZoneId).getDayOfMonth());
+        assertEquals(1, next.atZone(ZoneId.systemDefault()).getDayOfMonth());
         assertTrue(next.isAfter(Instant.now()));
     }
 
@@ -111,20 +111,20 @@ class TimeUtilsTest {
 
     @Test
     void getTimeBetweenNowReturnsPeriodBetweenPastDateAndToday() {
-        Instant past = LocalDate.now(ProgramZoneId).minusDays(10).atStartOfDay(ProgramZoneId).toInstant();
+        Instant past = LocalDate.now().minusDays(10).atStartOfDay(ZoneId.systemDefault()).toInstant();
         Period p = TimeUtils.getTimeBetweenNow(past);
-        assertEquals(LocalDate.now(ProgramZoneId), past.atZone(ProgramZoneId).toLocalDate().plus(p));
+        assertEquals(LocalDate.now(), past.atZone(ZoneId.systemDefault()).toLocalDate().plus(p));
     }
     @Test
     void getTimeBetweenNowReturnsPeriodBetweenTodayAndFutureDate() {
-        Instant future = LocalDate.now(ProgramZoneId).plusDays(10).atStartOfDay(ProgramZoneId).toInstant();
+        Instant future = LocalDate.now().plusDays(10).atStartOfDay(ZoneId.systemDefault()).toInstant();
         Period p = TimeUtils.getTimeBetweenNow(future);
-        assertEquals(future.atZone(ProgramZoneId).toLocalDate(), LocalDate.now(ProgramZoneId).plus(p));
+        assertEquals(future.atZone(ZoneId.systemDefault()).toLocalDate(), LocalDate.now().plus(p));
     }
 
     @Test
     void daysUntilDayOfNextYearForFutureDateThisYear() {
-        Instant future = LocalDate.now(ProgramZoneId).plusDays(30).atStartOfDay(ProgramZoneId).toInstant();
+        Instant future = LocalDate.now().plusDays(30).atStartOfDay(ZoneId.systemDefault()).toInstant();
         assertEquals(30, TimeUtils.DaysUntilDayOfNextYear(future));
     }
 }

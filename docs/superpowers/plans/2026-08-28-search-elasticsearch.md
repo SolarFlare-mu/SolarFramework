@@ -888,7 +888,7 @@ Expected: PASS, 14 tests.
 
 **Files:**
 - Create: `core-modules/SearchImpl/src/test/java/org/solarframework/search/elastic/ElasticSearchServiceLiveTest.java`
-- Modify: `CLAUDE.md` — the module layout list
+- Modify: `../../../.claude/CLAUDE.md` — the module layout list
 - Modify: `docs/superpowers/specs/2026-08-28-search-elasticsearch-design.md` — the status line
 
 **Interfaces:**
@@ -971,4 +971,4 @@ Expected: BUILD SUCCESS. Report the test counts. **Do not commit.**
 ## Outside this plan, for Loïc to do
 
 - **Commit the work** — no task above commits anything.
-- **SolarERP's `CLAUDE.md`** describes the framework layout as "complete as of 28 Aug 2026" and needs the two new modules added, and `requirements.md` § *Outstanding work* should gain the two deferred items (the MauCareers vacancy-search consumer, and the option of swapping to the official `elasticsearch-java` SDK). Both are edits to the SolarERP repo, which this session was told not to touch.
+- **SolarERP's `../../../.claude/CLAUDE.md`** describes the framework layout as "complete as of 28 Aug 2026" and needs the two new modules added, and `requirements.md` § *Outstanding work* should gain the two deferred items (the MauCareers vacancy-search consumer, and the option of swapping to the official `elasticsearch-java` SDK). Both are edits to the SolarERP repo, which this session was told not to touch.

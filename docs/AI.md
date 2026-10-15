@@ -22,6 +22,18 @@ solar.ai.timeout-seconds=300
 
 `AIRegistry.DefaultAIService` and `AIRegistry.SolarAIManager` are assigned at startup.
 
+**Cloud endpoints and keys.** Any OpenAI-compatible endpoint works, not only LM Studio. Write the key as
+`${NAME}` in `config/ai/agents.json` and it is read from `-DNAME`, else the environment
+variable `NAME`, when the request is sent. The file keeps `${NAME}`, so saving it never writes the secret.
+
+```json
+{ "name": "Groq", "baseUrl": "https://api.groq.com/openai", "apiKey": "${GROQ_API_KEY}", "model": "openai/gpt-oss-120b" }
+```
+
+The key goes with every request, so `isAvailable()` and `getAvailableModels()` work there too. A cloud
+endpoint reports no model state, context or capabilities, and `loadModel` is false: the `lms` CLI only
+runs for a server on this machine.
+
 ## 2. One-shots
 
 `service.createChatbot()` opens a **builder** for a new bot on that endpoint; `build()` closes it. With
@@ -96,7 +108,7 @@ Off by default — the whole transcript is sent every turn.
 ```java
 IAIService fast = SolarAIManager.makeNewService("fast", "qwen2.5-7b");   // inherits url/key/timeout
 SolarAIManager.addChatbot(bot);
-SolarAIManager.SaveAsFile(path);   // services + chatbots as JSON, like DatabaseManager
+SolarAIManager.SaveAsFile();   // services + chatbots to AIConfig.FILE, like DatabaseManager
 ```
 
 ## 7. Reading the log

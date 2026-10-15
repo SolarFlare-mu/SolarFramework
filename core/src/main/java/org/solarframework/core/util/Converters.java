@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,7 +16,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.solarframework.core.util.NumberUtils.isNumeric;
-import static org.solarframework.core.Constants.ProgramZoneId;
 
 public class Converters {
 
@@ -74,6 +74,13 @@ public class Converters {
             default -> throw new IllegalArgumentException("No text rule for type " + type.getSimpleName() + ".");
         };
     }
+    public static LocalDate parseDateOrNull(String text) { // null rather than a DateTimeParseException, so a form can refuse a mistyped day in words
+        try {
+            return LocalDate.parse(text.trim());
+        } catch (Exception e) {
+            return null;
+        }
+    }
     /** What an empty box means for a type that cannot be null: a primitive field would throw on a null write. */
     private static Object blankValueOf(Class<?> type) {
         if (!type.isPrimitive()) return null;
@@ -96,14 +103,14 @@ public class Converters {
     /** An instant is stored as a moment, so a value carrying no zone is read in the program's own zone. */
     private static Instant parseInstant(String v) {
         if (v.endsWith("Z")) return Instant.parse(v);
-        return parseLocalDateTime(v).atZone(ProgramZoneId).toInstant();
+        return parseLocalDateTime(v).atZone(ZoneId.systemDefault()).toInstant();
     }
 
     public static long DateHourToEpochSecond(String d) {
-        return LocalDateTime.parse(d, DateTimeFormatter.ofPattern("dd/MM/yyyy - HH:mm")).atZone(ProgramZoneId).toInstant().getEpochSecond();
+        return LocalDateTime.parse(d, DateTimeFormatter.ofPattern("dd/MM/yyyy - HH:mm")).atZone(ZoneId.systemDefault()).toInstant().getEpochSecond();
     }
     public static String EpochSecondToPattern(long epoch, String pattern) {
-        return Instant.ofEpochSecond(epoch).atZone(ProgramZoneId).format(DateTimeFormatter.ofPattern(pattern));
+        return Instant.ofEpochSecond(epoch).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern(pattern));
     }
     public static long PatternToEpochSecond(String time, String pattern) throws DateTimeParseException {
         try {
@@ -111,9 +118,9 @@ public class Converters {
                 return Long.parseLong(time);
             }
             if (pattern.contains("s") || pattern.contains("m")) {
-                return LocalDateTime.parse(time, DateTimeFormatter.ofPattern(pattern)).atZone(ProgramZoneId).toInstant().getEpochSecond();
+                return LocalDateTime.parse(time, DateTimeFormatter.ofPattern(pattern)).atZone(ZoneId.systemDefault()).toInstant().getEpochSecond();
             } else {
-                return LocalDate.parse(time, DateTimeFormatter.ofPattern("dd/MM/yyyy")).atStartOfDay().atZone(ProgramZoneId).toInstant().getEpochSecond();
+                return LocalDate.parse(time, DateTimeFormatter.ofPattern("dd/MM/yyyy")).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant().getEpochSecond();
             }
         } catch (Exception ignored) {}
         return Instant.now().getEpochSecond();
@@ -124,9 +131,9 @@ public class Converters {
                 return Long.parseLong(time);
             }
             if (pattern.contains("s") || pattern.contains("m")) {
-                return LocalDateTime.parse(time, DateTimeFormatter.ofPattern(pattern)).atZone(ProgramZoneId).toInstant().getEpochSecond();
+                return LocalDateTime.parse(time, DateTimeFormatter.ofPattern(pattern)).atZone(ZoneId.systemDefault()).toInstant().getEpochSecond();
             } else {
-                return LocalDate.parse(time, DateTimeFormatter.ofPattern("dd/MM/yyyy")).atStartOfDay().atZone(ProgramZoneId).toInstant().getEpochSecond();
+                return LocalDate.parse(time, DateTimeFormatter.ofPattern("dd/MM/yyyy")).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant().getEpochSecond();
             }
         } catch (Exception ignored) {}
         return Instant.now().toEpochMilli();

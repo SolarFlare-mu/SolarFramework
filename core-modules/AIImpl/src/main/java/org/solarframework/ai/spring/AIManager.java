@@ -7,6 +7,7 @@ import org.solarframework.ai.IAIManager;
 import org.solarframework.ai.IAIService;
 import org.solarframework.ai.dto.ChatbotDefinition;
 import org.solarframework.ai.dto.ServiceDefinition;
+import org.solarframework.json.JSONItem;
 import org.springframework.ai.model.tool.ToolCallingManager;
 
 import java.util.*;
@@ -160,12 +161,8 @@ public class AIManager implements IAIManager {
         return out;
     }
 
-    @Override public void LoadFromFile(String path) {
-        log.info("Opening AI config file: {}", path);
-        AIConfigFile file = AIConfigFile.read(path, this);
-
-        // The file is the whole truth now - nothing is seeded from anywhere else, so what it does not
-        // name does not exist. Clearing first is what makes a removal on the managing screen stick.
+    @Override public void LoadFromFile() {
+        AIConfigFile file = JSONItem.ReadOrCreate(AIConfigFile.class, new AIConfigFile(this));
         services.clear();
         defaultName = null;
         for (ServiceDefinition d : file.getServices()) {
@@ -181,9 +178,8 @@ public class AIManager implements IAIManager {
 
         log.info("Loaded {} service(s) and {} chatbot(s)", services.size(), chatbots.size());
     }
-
-    @Override public void SaveAsFile(String path) {
-        if (new AIConfigFile(this).Write(path) == null) log.error("Failed to write AI config file: {}", path);
+    @Override public void SaveAsFile() {
+        if (new AIConfigFile(this).Write() == null) log.error("Failed to write AI config file: {}", AIConfig.FILE);
     }
 
     @Override public String toString() { return "AIManager[" + services.keySet() + ", " + chatbots.size() + " chatbot(s)]"; }

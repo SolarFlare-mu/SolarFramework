@@ -15,6 +15,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class FileUtils {
     private static final Logger log = LoggerFactory.getLogger(FileUtils.class);
@@ -90,6 +92,22 @@ public class FileUtils {
     private static void copyFile(Path from, Path to) throws IOException {
         Files.createDirectories(to.getParent());
         Files.copy(from, to, StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    /** Extracts a ZIP beneath target, rejecting entries that escape it. Closes the input stream. */
+    public static void unzip(InputStream source, Path target) throws IOException {
+        Path root = target.toAbsolutePath().normalize();
+        try (ZipInputStream zip = new ZipInputStream(source)) {
+            for (ZipEntry entry; (entry = zip.getNextEntry()) != null; zip.closeEntry()) {
+                Path out = root.resolve(entry.getName().replace('\\', '/')).normalize();
+                if (out.equals(root) || !out.startsWith(root)) throw new IOException("ZIP entry escapes target: " + entry.getName());
+                if (entry.isDirectory()) Files.createDirectories(out);
+                else {
+                    Files.createDirectories(out.getParent());
+                    Files.copy(zip, out);
+                }
+            }
+        }
     }
 
     /** Deepest first, since a folder cannot be deleted before what is in it. */

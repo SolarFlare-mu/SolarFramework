@@ -21,14 +21,14 @@ public class MailConfig {
 
     /** Seeding is gated on there being no file yet because {@link MailManager#LoadFromFile} clears and rebuilds from the file: on any later start the seeded mailbox is added and thrown away in the same breath. */
     @Bean(destroyMethod = "close")
-    public IMailManager solarMailManager(@Value("${spring.mail.host:#{null}}") String host, @Value("${spring.mail.port:587}") int port, @Value("${spring.mail.username:#{null}}") String username, @Value("${spring.mail.password:#{null}}") String password, @Value("${spring.mail.properties.mail.smtp.auth:true}") boolean auth, @Value("${spring.mail.properties.mail.smtp.starttls.enable:true}") boolean startTls, @Value("${solar.mail.config-file:" + FILE + "}") String configFile) {
+    public IMailManager solarMailManager(@Value("${spring.mail.host:#{null}}") String host, @Value("${spring.mail.port:587}") int port, @Value("${spring.mail.username:#{null}}") String username, @Value("${spring.mail.password:#{null}}") String password, @Value("${spring.mail.properties.mail.smtp.auth:true}") boolean auth, @Value("${spring.mail.properties.mail.smtp.starttls.enable:true}") boolean startTls) {
         MailManager manager = new MailManager();
-        if (host != null && Files.notExists(SolarHome.pathTo(configFile))) {
+        if (host != null && Files.notExists(SolarHome.pathTo(FILE))) {
             IMailService seeded = manager.makeNewService(IMailService.DEFAULT, host, port, username, password, username);
             seeded.setAuth(auth);
             seeded.setStartTls(startTls);
         }
-        manager.LoadFromFile(configFile);
+        manager.LoadFromFile();
         return manager;
     }
 }

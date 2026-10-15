@@ -106,27 +106,19 @@ public class MailManager implements IMailManager {
     }
 
     /** Clearing first is what makes a removal on a managing screen stick: the file is the whole truth afterwards. */
-    @Override public void LoadFromFile(String path) {
-        MailConfigFile file = JSONItem.ReadOrCreate(path, MailConfigFile.class, new MailConfigFile(this));
+    @Override public void LoadFromFile() {
+        MailConfigFile file = JSONItem.ReadOrCreate(MailConfigFile.class, new MailConfigFile(this));
         services.clear();
         defaultName = null;
-        for (MailboxDefinition d : file.mailboxes) {
+        for (MailboxDefinition d : file.getMailboxes()) {
             IMailService target = makeNewService(d.name(), d.host(), d.port(), d.username(), d.password(), d.from());
             target.setAuth(d.auth());
             target.setStartTls(d.startTls());
         }
-        log.info("Loaded {} mailbox(es) from {}", services.size(), path);
+        log.info("Loaded {} mailbox(es)", services.size());
     }
-
-    @Override public void SaveAsFile(String path) {
-        if (new MailConfigFile(this).Write(path) == null) log.error("Failed to write mail config file: {}", path);
-    }
-
-    /** The file itself, mirroring {@code DataSourceFile} and {@code AIConfigFile}. */
-    protected static class MailConfigFile extends JSONItem<MailConfigFile> {
-        private final List<MailboxDefinition> mailboxes = new ArrayList<>();
-
-        public MailConfigFile(IMailManager manager) { mailboxes.addAll(manager.getMailboxDefinitions()); }
+    @Override public void SaveAsFile() {
+        if (new MailConfigFile(this).Write() == null) log.error("Failed to write mail config file: {}", MailConfig.FILE);
     }
 
     @Override public String toString() { return "MailManager[" + services.keySet() + "]"; }

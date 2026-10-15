@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solarframework.backup.dto.BackupEntry;
 import org.solarframework.core.util.FileUtils;
+import org.solarframework.core.util.SolarHome;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -127,19 +128,27 @@ class BackupServiceTest {
 
     /** The settings a screen may change have to survive a restart, the same way the mailboxes do. */
     @Test void settingsSurviveTheFile() throws Exception {
-        Path file = root.resolve("settings.json");
-        service.setKeep(3);
-        service.SaveAsFile(file.toString());
+        String previousHome = System.getProperty(SolarHome.PROPERTY);
+        System.setProperty(SolarHome.PROPERTY, root.toString());
+        SolarHome.forgetDataFolder();
+        try {
+            service.setKeep(3);
+            service.SaveAsFile();
 
-        service.setKeepDays(7);
-        service.SaveAsFile(file.toString());
+            service.setKeepDays(7);
+            service.SaveAsFile();
 
-        BackupService reloaded = new BackupService();
-        reloaded.LoadFromFile(file.toString());
-        assertEquals(3, reloaded.getKeep());
-        assertEquals(7, reloaded.getKeepDays());
-        assertEquals(root.toString(), reloaded.getDirectory());
-        assertEquals(List.of(kept.toString()), reloaded.getIncludedPaths());
+            BackupService reloaded = new BackupService();
+            reloaded.LoadFromFile();
+            assertEquals(3, reloaded.getKeep());
+            assertEquals(7, reloaded.getKeepDays());
+            assertEquals(root.toString(), reloaded.getDirectory());
+            assertEquals(List.of(kept.toString()), reloaded.getIncludedPaths());
+        } finally {
+            if (previousHome == null) System.clearProperty(SolarHome.PROPERTY);
+            else System.setProperty(SolarHome.PROPERTY, previousHome);
+            SolarHome.forgetDataFolder();
+        }
     }
 
     @Test void readsTheAddressOutOfAJdbcString() {

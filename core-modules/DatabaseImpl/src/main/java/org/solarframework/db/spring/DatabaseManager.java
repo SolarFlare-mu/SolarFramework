@@ -14,6 +14,7 @@ import org.solarframework.db.api.*;
 import org.solarframework.db.api.dto.DatabaseStats;
 import org.solarframework.db.api.dto.TableStats;
 import org.solarframework.db.exception.DataMigrationException;
+import org.solarframework.json.JSONItem;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
@@ -469,16 +470,15 @@ public class DatabaseManager implements IDatabaseManager {
 
 
 
-    public void LoadFromFile(String path) {
-        log.info("Opening database source file: {}", path);
-        DataSourceFile db = DataSourceFile.read(path);
-        List<DatabaseService> readSources = db.getSources();
+    @Override public void LoadFromFile() {
+        DataSourceFile file = JSONItem.ReadOrCreate(DataSourceFile.class, new DataSourceFile(this));
+        List<DatabaseService> readSources = file.getSources();
         if (readSources.isEmpty()) {
-            readSources = new DataSourceFile(this).Write(path).getSources();
+            readSources = new DataSourceFile(this).Write().getSources();
             log.warn("No database sources found, re-creating source file using default sources.");
         }
         if (readSources.stream().filter(IDatabaseService::isDefault).count() != 1) {
-            readSources = new DataSourceFile(this).Write(path).getSources();
+            readSources = new DataSourceFile(this).Write().getSources();
             log.warn("None or multiple default database sources found, re-creating source file using default sources.");
         }
 
@@ -495,15 +495,15 @@ public class DatabaseManager implements IDatabaseManager {
 
         Cooldown = Instant.now().minusSeconds(1);
         reload();
-        log.info("Loaded database source file: {}", path);
+        log.info("Loaded {} data source(s)", getSources().size());
     }
-    public void SaveAsFile(String path) {
+    @Override public void SaveAsFile() {
         if (getSources().isEmpty()) {
             log.error("Failed to write data source file, no database sources found.");
         } else if (getSources().stream().filter(IDatabaseService::isDefault).count() != 1) {
             log.warn("Failed to write data source file, none or multiple default database sources found.");
-        } else {
-            new DataSourceFile(this).Write(path);
+        } else if (new DataSourceFile(this).Write() == null) {
+            log.error("Failed to write data source file: {}", DatabaseConfig.FILE);
         }
     }
 

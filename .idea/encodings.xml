@@ -37,6 +37,7 @@
     <file url="file://$PROJECT_DIR$/misc-modules/TournamentImpl/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/runners/CSharpRunner/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/runners/JavaRunner/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/runners/NodeRunner/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/runners/PythonRunner/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/runners/RunnerAPI/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />

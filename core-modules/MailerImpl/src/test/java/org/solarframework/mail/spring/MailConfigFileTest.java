@@ -4,6 +4,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.solarframework.mail.IMailService;
+import org.solarframework.core.util.SolarHome;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,22 +17,34 @@ import static org.solarframework.mail.spring.MailRegistry.SolarMailManager;
 class MailConfigFileTest {
 
     private Path file;
+    private String previousHome;
 
     @BeforeEach void makeFile() throws Exception {
-        file = Files.createTempFile("mail-config", ".json");
-        Files.delete(file);
+        previousHome = System.getProperty(SolarHome.PROPERTY);
+        Path home = Files.createTempDirectory("mail-config");
+        System.setProperty(SolarHome.PROPERTY, home.toString());
+        SolarHome.forgetDataFolder();
+        file = home.resolve(MailConfig.FILE);
     }
-    @AfterEach void removeFile() throws Exception { Files.deleteIfExists(file); }
+    @AfterEach void removeFile() throws Exception {
+        Files.deleteIfExists(file);
+        Files.deleteIfExists(file.getParent());
+        Files.deleteIfExists(file.getParent().getParent());
+        Files.deleteIfExists(file.getParent().getParent().getParent());
+        if (previousHome == null) System.clearProperty(SolarHome.PROPERTY);
+        else System.setProperty(SolarHome.PROPERTY, previousHome);
+        SolarHome.forgetDataFolder();
+    }
 
 
     @Test void savesAndReloadsEveryMailbox() {
         MailManager manager = new MailManager();
         manager.makeNewService(IMailService.DEFAULT, "smtp.example.com", 587, "agency@example.com", "secret", "no-reply@example.com").setStartTls(false);
         manager.makeNewService("notices", "smtp.other.com", 25, "notices@other.com", "pass", null);
-        manager.SaveAsFile(file.toString());
+        manager.SaveAsFile();
 
         MailManager reloaded = new MailManager();
-        reloaded.LoadFromFile(file.toString());
+        reloaded.LoadFromFile();
         assertEquals(2, reloaded.getServices().size());
         assertTrue(reloaded.getDefaultService().isDefault(), "the mailbox named Default must still be the default one");
         assertEquals("smtp.other.com", reloaded.getService("notices").getHost());
@@ -45,11 +58,11 @@ class MailConfigFileTest {
         MailManager manager = new MailManager();
         manager.makeNewService(IMailService.DEFAULT, "smtp.example.com", 587, "agency@example.com", "secret", null);
         manager.makeNewService("notices", "smtp.other.com", 25, "notices@other.com", "pass", null);
-        manager.SaveAsFile(file.toString());
+        manager.SaveAsFile();
 
         manager.removeService("notices");
-        manager.SaveAsFile(file.toString());
-        manager.LoadFromFile(file.toString());
+        manager.SaveAsFile();
+        manager.LoadFromFile();
         assertFalse(manager.hasService("notices"));
         assertEquals(1, manager.getServices().size());
     }
@@ -58,7 +71,7 @@ class MailConfigFileTest {
     @Test void aMissingFileIsWrittenFromWhatIsAlreadyThere() {
         MailManager manager = new MailManager();
         manager.makeNewService(IMailService.DEFAULT, "smtp.example.com", 587, "agency@example.com", "secret", null);
-        manager.LoadFromFile(file.toString());
+        manager.LoadFromFile();
         assertTrue(Files.exists(file));
         assertEquals(1, manager.getServices().size());
         assertEquals("smtp.example.com", manager.getDefaultService().getHost());

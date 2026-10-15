@@ -27,7 +27,6 @@ public interface IMailManager {
     IMailService makeNewService(String name, String host, int port, String username, String password, String from);
 
     /** The file becomes the whole truth: a mailbox it does not name stops existing. */
-    void LoadFromFile(String path);
-
-    void SaveAsFile(String path);
+    void LoadFromFile();
+    void SaveAsFile();
 }

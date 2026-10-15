@@ -163,7 +163,10 @@ public abstract class JSONItem<T extends JSONItem<T>> implements Serializable {
     public static <A extends JSONItem<A>> A ReadOrCreate(String filePath, Class<A> clazz, A fallback) {
         try {
             A read = ReadJSON(filePath, clazz);
-            if (read != null) return read;
+            if (read != null) {
+                log.info("Read {} from {}", clazz.getSimpleName(), SolarHome.pathTo(filePath));
+                return read;
+            }
         } catch (Exception e) {
             // ReadJSON only swallows a missing file; anything reaching here is an existing file that failed to parse, so it is renamed aside rather than destroyed - silently replacing it with `fallback` is what used to erase real data (e.g. configured database sources) with no trace of why.
             Path broken = SolarHome.pathTo(filePath);
@@ -171,6 +174,7 @@ public abstract class JSONItem<T extends JSONItem<T>> implements Serializable {
             try { Files.move(broken, broken.resolveSibling(broken.getFileName() + ".corrupt"), StandardCopyOption.REPLACE_EXISTING); } catch (IOException _e) {}
         }
         fallback.Write(filePath);
+        log.info("Created {} at {} from defaults", clazz.getSimpleName(), SolarHome.pathTo(filePath));
         return fallback;
     }
     public static <A extends JSONItem<A>> A ReadOrCreate(Class<A> clazz, A fallback) {

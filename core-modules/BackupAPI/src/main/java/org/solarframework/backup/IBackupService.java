@@ -46,7 +46,6 @@ public interface IBackupService {
     /** Runs itself after every {@link #take}. */
     int prune();
 
-    void LoadFromFile(String path);
-
-    void SaveAsFile(String path);
+    void LoadFromFile();
+    void SaveAsFile();
 }

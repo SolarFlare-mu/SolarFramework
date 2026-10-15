@@ -258,17 +258,16 @@ public class BackupService implements IBackupService {
     }
 
 
-    @Override public void LoadFromFile(String path) {
-        BackupSettingsFile settings = BackupSettingsFile.read(path, this);
-        directory = settings.directory;
-        keep = settings.keep;
-        keepDays = settings.keepDays;
-        includedPaths = new ArrayList<>(settings.includedPaths);
+    @Override public void LoadFromFile() {
+        BackupSettingsFile file = JSONItem.ReadOrCreate(BackupSettingsFile.class, new BackupSettingsFile(this));
+        directory = file.getDirectory();
+        keep = file.getKeep();
+        keepDays = file.getKeepDays();
+        includedPaths = new ArrayList<>(file.getIncludedPaths());
         log.info("Backups go to {}, keeping {}{}, with {}", directory, keep <= 0 ? "every one" : keep, keepDays > 0 ? " and everything from the last " + keepDays + " day(s)" : "", includedPaths);
     }
-
-    @Override public void SaveAsFile(String path) {
-        if (new BackupSettingsFile(this).Write(path) == null) log.error("Failed to write backup settings file: {}", path);
+    @Override public void SaveAsFile() {
+        if (new BackupSettingsFile(this).Write() == null) log.error("Failed to write backup settings file: {}", BackupConfig.FILE);
     }
 
     /** What a database tool needs out of {@code jdbc:mariadb://host:port/database?options}. */

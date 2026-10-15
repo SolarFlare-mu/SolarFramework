@@ -7,11 +7,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.time.ZoneId;
 
 public class Constants {
-    
-    public static ZoneId ProgramZoneId = ZoneId.of("Europe/Paris");
 
     static void main(String[] args) throws IOException {
         //removeBlackBackground("D:/blue.png", "D:/blue2.png", 200);
