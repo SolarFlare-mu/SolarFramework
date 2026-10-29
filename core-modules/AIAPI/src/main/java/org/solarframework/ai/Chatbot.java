@@ -74,7 +74,7 @@ public class Chatbot {
         public Builder agentOptions(AIOptions agentOptions) { bot.agentOptions = agentOptions; return this; }
         /** Applies to both the chat and agent settings, so one call switches the whole bot's model. */
         public Builder model(String model) { bot.chatOptions = bot.chatOptions.withModel(model); bot.agentOptions = bot.agentOptions.withModel(model); return this; }
-        public Builder tools(Object... toolObjects) { for (Object t : toolObjects) if (t != null && bot.tools.stream().noneMatch(o -> o.getClass().equals(t.getClass()))) bot.tools.add(t); return this; }
+        public Builder tools(Object... toolObjects) { for (Object t : toolObjects) if (t != null && !AIToolSpec.isHeldIn(bot.tools, t)) bot.tools.add(t); return this; }
         /** Whatever the application needs remembered and this record has no field for — see {@link ChatbotDefinition}. */
         public Builder attributes(List<String> attributes) { bot.attributes.clear(); if (attributes != null) bot.attributes.addAll(attributes); return this; }
         public Builder memory(Memory memory) { bot.memory = memory; return this; }

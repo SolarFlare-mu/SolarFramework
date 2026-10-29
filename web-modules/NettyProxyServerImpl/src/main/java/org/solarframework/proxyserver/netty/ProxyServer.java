@@ -8,6 +8,7 @@ import io.netty.handler.ssl.SslContextBuilder;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.solarframework.proxyserver.obj.CallerHeaders;
 import org.solarframework.proxyserver.obj.domains.BaseDomain;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
@@ -88,7 +89,7 @@ public class ProxyServer {
             return tooManyRequests(res, permit.waitSeconds());
         }
 
-        return d.isProxy() ? proxy(d.getPath(), req, res, permit.contributed()) : serveStatic(d.getPath(), req, res);
+        return d.isProxy() ? proxy(d.getPath(), req, res, permit.contributed()) : serveStatic(d, req, res);
     }
 
     /** NFR-10, NFR-20: worded identically to PluginController's own throttleMessage, so a caller cannot tell which
@@ -106,42 +107,23 @@ public class ProxyServer {
                 .sendString(Mono.just("Error: This endpoint is not available from your location."));
     }
 
-    /**
-     * Tells the application behind the proxy who actually called, and whether this call already passed a
-     * contributed rule's address check and spent its permit here. Both are overwritten rather than appended to: the
-     * proxy is the edge, so whatever the caller sent for either is only its own unverified claim. A request only
-     * reaches this point at all once {@code permit.allowed()} is true, so the address half is never in question here.
-     */
-    private static void stampCaller(HttpHeaders headers, String clientIp, boolean alreadyGuarded) {
-        headers.set("X-Forwarded-For", clientIp);
-        headers.set("X-Real-IP", clientIp);
-        headers.set("X-ProxyGuard-Checked", alreadyGuarded ? "1" : "0");
-    }
     /** The proxy is the edge, so the socket address is the real caller and no header needs to be believed. */
     private static String clientIp(HttpServerRequest req) {
         InetSocketAddress address = req.remoteAddress();
         return address == null ? "unknown" : address.getAddress().getHostAddress();
     }
 
-    private Publisher<Void> serveStatic(String dir, HttpServerRequest req, HttpServerResponse res) {
-        try {
-            Path base = Path.of(dir).toAbsolutePath().normalize();
-            String reqPath = req.fullPath();
-            if (reqPath.isEmpty() || reqPath.endsWith("/")) reqPath += "index.html";
-            Path file = base.resolve(reqPath.substring(1)).normalize();
-
-            if (!file.startsWith(base) || !Files.isReadable(file) || Files.isDirectory(file)) return res.status(HttpResponseStatus.NOT_FOUND).send();
-
-            res.header(HttpHeaderNames.CONTENT_TYPE, contentType(file));
-            return res.sendFile(file);
-        } catch (Exception e) {
-            return res.status(HttpResponseStatus.INTERNAL_SERVER_ERROR).send();
-        }
+    private Publisher<Void> serveStatic(BaseDomain<?> domain, HttpServerRequest req, HttpServerResponse res) {
+        return domain.fileFor(req.fullPath())
+                .<Publisher<Void>>map(file -> res.header(HttpHeaderNames.CONTENT_TYPE, contentType(file)).sendFile(file))
+                .orElseGet(() -> res.status(HttpResponseStatus.NOT_FOUND).send());
     }
 
+    /** What the backend is told about the caller is the proxy's own (CallerHeaders); this server only ever listens on HTTPS. */
     private Publisher<Void> proxy(String target, HttpServerRequest req, HttpServerResponse res, boolean alreadyGuarded) {
+        CallerHeaders caller = new CallerHeaders(clientIp(req), req.requestHeaders().get(HttpHeaderNames.HOST), "https", alreadyGuarded);
         return HttpClient.create()
-                .headers(h -> stampCaller(h.set(req.requestHeaders()), clientIp(req), alreadyGuarded))
+                .headers(h -> caller.writeInto(h.set(req.requestHeaders())::set, h::remove))
                 .request(req.method())
                 .uri(target + req.uri())
                 .send((cReq, out) -> out.send(req.receive().retain()))

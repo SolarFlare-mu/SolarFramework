@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.solarframework.ai.AIToolSpec;
 import org.solarframework.ai.Chatbot;
 import org.solarframework.ai.Prompts;
 import org.solarframework.ai.dto.*;
@@ -319,7 +320,7 @@ public class Conversation extends DatabaseObject.ID_RECORD_OBJ<String, Conversat
 
     private List<Object> collectTools(Object[] extra) {
         List<Object> all = new ArrayList<>(bot.getTools());
-        if (extra != null) for (Object o : extra) if (o != null && all.stream().noneMatch(x -> x.getClass().equals(o.getClass()))) all.add(o);
+        if (extra != null) for (Object o : extra) if (o != null && !AIToolSpec.isHeldIn(all, o)) all.add(o);
         return all;
     }
 

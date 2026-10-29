@@ -35,13 +35,9 @@ public class StaticSiteFilter implements WebFilter, Ordered {
 
         if (d == null || d.isProxy()) return chain.filter(exchange);
         try {
-            Path base = Path.of(d.getPath()).toAbsolutePath().normalize();
-            String reqPath = exchange.getRequest().getPath().value();
-            if (reqPath.endsWith("/")) reqPath += "index.html";
-            Path file = base.resolve(reqPath.substring(1)).normalize();
-
             ServerHttpResponse response = exchange.getResponse();
-            if (!file.startsWith(base) || !Files.isReadable(file) || Files.isDirectory(file)) {
+            Path file = d.fileFor(exchange.getRequest().getPath().value()).orElse(null);
+            if (file == null) {
                 response.setStatusCode(HttpStatus.NOT_FOUND);
                 return response.setComplete();
             }

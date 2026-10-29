@@ -2,6 +2,7 @@ package org.solarframework.ai.spring;
 
 import org.junit.jupiter.api.Test;
 import org.solarframework.ai.AITool;
+import org.solarframework.ai.AIToolSpec;
 import org.springframework.ai.tool.ToolCallback;
 
 import java.util.List;
@@ -60,6 +61,28 @@ class ToolAdapterTest {
 
     @Test void severalObjectsContributeAllTheirTools() {
         assertEquals(3, adapter.callbacks(new Clock(), new Converter(), new Ticket()).size());
+    }
+
+    @Test void aSpecBecomesOneToolWhoseArgumentsReachTheFunctionByName() {
+        AIToolSpec spec = new AIToolSpec("lookup", "Finds a word.", List.of("table", "text"), a -> a.get("table") + ":" + a.get("text"));
+        ToolCallback callback = adapter.callbacks(spec).getFirst();
+        assertEquals("lookup", callback.getToolDefinition().name());
+        assertEquals("Finds a word.", callback.getToolDefinition().description());
+        assertTrue(callback.getToolDefinition().inputSchema().contains("table") && callback.getToolDefinition().inputSchema().contains("text"));
+        assertEquals("staff:ann", callback.call("{\"table\":\"staff\",\"text\":\"ann\"}"));
+        assertEquals("staff:null", callback.call("{\"table\":\"staff\"}"), "a value the model left out is null");
+    }
+
+    @Test void specsOfOneClassAreAllKept() { // objects of one class count as one tool set, but specs are many of one class
+        List<Object> held = new java.util.ArrayList<>();
+        AIToolSpec first = new AIToolSpec("a", "A.", List.of(), _ -> "a"), second = new AIToolSpec("b", "B.", List.of(), _ -> "b");
+        for (Object tool : new Object[]{first, second, new Clock(), new Clock()}) if (!AIToolSpec.isHeldIn(held, tool)) held.add(tool);
+        assertEquals(3, held.size());
+    }
+
+    @Test void aFailingSpecIsReportedAsAToolFailure() {
+        ToolCallback callback = adapter.callbacks(new AIToolSpec("boom", "Fails.", List.of(), _ -> { throw new IllegalStateException("no"); })).getFirst();
+        assertThrows(org.springframework.ai.tool.execution.ToolExecutionException.class, () -> callback.call("{}"));
     }
 
     public static class Clock {
